@@ -231,7 +231,7 @@ def build_loader(cc: str, target: str, strip: str, objcopy: str, objdump: str,
     if loader_arch_cflags:
         loader_cflags += loader_arch_cflags.split()
     loader_ldflags = ["-static", "-nostdlib",
-                      f"-Wl,--build-id=none,-Ttext={loader_address},--rosegment,-z,noexecstack"]
+                      f"-Wl,--build-id=none,-Ttext={loader_address},--rosegment,-z,noexecstack,-z,max-page-size=0x4000"]
 
     suffix = "-m32" if m32 else ""
     loader_exe = build_dir / f"loader{suffix}.exe"

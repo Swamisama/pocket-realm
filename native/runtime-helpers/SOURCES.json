@@ -1,0 +1,44 @@
+[
+  {
+    "component": "shmem",
+    "upstream": "https://github.com/termux/libandroid-shmem",
+    "commit": "447caef31c2d02a711770944d16f0fe8981e4600",
+    "files": {
+      "shmem.c": {
+        "url": "https://raw.githubusercontent.com/termux/libandroid-shmem/447caef31c2d02a711770944d16f0fe8981e4600/shmem.c",
+        "sha256": "b37e1ea3383a673a90027ac09eb0c791ad093d76fe20aeb0cb8dd60afb8ae3e1"
+      },
+      "shm.h": {
+        "url": "https://raw.githubusercontent.com/termux/libandroid-shmem/447caef31c2d02a711770944d16f0fe8981e4600/shm.h",
+        "sha256": "f5e6b6a464d281981c0850c283caef9d744c8554668bf6310155ea4b20145966"
+      },
+      "exports.txt": {
+        "url": "https://raw.githubusercontent.com/termux/libandroid-shmem/447caef31c2d02a711770944d16f0fe8981e4600/exports.txt",
+        "sha256": "cdbffb98eebfac6d5b5221139f4f7f23f3e497d706d28d63da22916fe734a266"
+      },
+      "LICENSE": {
+        "url": "https://raw.githubusercontent.com/termux/libandroid-shmem/447caef31c2d02a711770944d16f0fe8981e4600/LICENSE",
+        "sha256": "0dd43abe17196b0224cb0b159819af798cd508a82a21e5870126fff4e899a7eb"
+      }
+    }
+  },
+  {
+    "component": "sysv-sem",
+    "upstream": "https://github.com/termux/termux-packages",
+    "commit": "53253c20050a29d5d7663fd2690ac9a6c2a3466b",
+    "files": {
+      "sys_sem.c": {
+        "url": "https://raw.githubusercontent.com/termux/termux-packages/53253c20050a29d5d7663fd2690ac9a6c2a3466b/packages/libandroid-sysv-semaphore/sys_sem.c",
+        "sha256": "426826988c41f59d9b94a26776c563b0a87d7c8f23ecd47f684047e3fa2cc7d7"
+      },
+      "sys_sem.h": {
+        "url": "https://raw.githubusercontent.com/termux/termux-packages/53253c20050a29d5d7663fd2690ac9a6c2a3466b/packages/libandroid-sysv-semaphore/sys_sem.h",
+        "sha256": "1053cf2876671d4446a50160afc24587b9743270d1cb6f4eec5b4c44bb63b8aa"
+      },
+      "LICENSE": {
+        "url": "https://raw.githubusercontent.com/termux/termux-packages/53253c20050a29d5d7663fd2690ac9a6c2a3466b/packages/libandroid-sysv-semaphore/LICENSE",
+        "sha256": "847e3e5accf5863bcce0a369c6ad93467bbe4107bf1aae9552066ad396c687d4"
+      }
+    }
+  }
+]

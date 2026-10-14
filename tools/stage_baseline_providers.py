@@ -76,9 +76,8 @@ def main():
         # The translated provider's Bionic launcher and shmem/semaphore codecs
         # are recovered byte-for-byte from the hash-pinned release. They remain
         # dependency providers, with their existing corresponding source in-tree.
-        for name in ('libbox64.so', 'libpocket_android_shmem.so', 'libpocket_android_sysv_semaphore.so',
-                     'libpocket_lzma.so', 'libpocket_z.so'):
-            stage(f'lib/arm64-v8a/{name}', wine / 'jniLibs/arm64-v8a' / name)
+        for name in ('libbox64.so', 'libpocket_lzma.so', 'libpocket_z.so'):
+            stage(f'lib/arm64-v8a/{name}', wine / 'jniLibs' / name)
     # Preserve the historical package attribution while making the actual
     # recovery boundary explicit. This is not claimed as a local MariaDB build.
     provenance = {'schema': 1, 'provider': record['provider'], 'abi': record['abi'],

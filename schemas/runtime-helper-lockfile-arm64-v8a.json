@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "abi": "arm64-v8a",
+  "ndk": "30.0.15729638",
+  "artifacts": {
+    "native/.build-arm64/wine-staging/jniLibs/libpocket_android_shmem.so": {
+      "size": 14376,
+      "sha256": "84112449af697015a3992ab65f8aa6950c777eedc9d0d3fb5f6667e3a352c45e",
+      "exports": [
+        "libandroid_shmat",
+        "libandroid_shmctl",
+        "libandroid_shmdt",
+        "libandroid_shmget",
+        "shmat",
+        "shmctl",
+        "shmdt",
+        "shmget"
+      ]
+    },
+    "native/.build-arm64/wine-staging/jniLibs/libpocket_android_sysv_semaphore.so": {
+      "size": 4944,
+      "sha256": "20b4a082a6897667b1153b179fe212bdc9c5ebeb1a37c71bf5411f42dec39481",
+      "exports": [
+        "libandroid_semctl",
+        "libandroid_semget",
+        "libandroid_semop",
+        "libandroid_semtimedop",
+        "semctl",
+        "semget",
+        "semop",
+        "semtimedop"
+      ]
+    }
+  }
+}
