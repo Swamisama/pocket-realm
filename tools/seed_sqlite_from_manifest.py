@@ -48,6 +48,15 @@ def entry_bytes(entry: dict) -> bytes:
     path = ROOT / entry["source_path"]
     data = (gzip.open(path, "rb").read() if path.suffix == ".gz"
             else path.read_bytes())
+    if hashlib.sha256(data).hexdigest() != entry["sql_sha256"]:
+        # Only accept host line-ending conversion when it recovers the exact
+        # shipped identity. This also covers the decompressed SQL corpus.
+        lf = data.replace(b"\r\n", b"\n")
+        for candidate in (lf, lf.replace(b"\n", b"\r\n")):
+            if (len(candidate) == entry["sql_size"] and
+                    hashlib.sha256(candidate).hexdigest() == entry["sql_sha256"]):
+                data = candidate
+                break
     digest = hashlib.sha256(data).hexdigest()
     if digest != entry["sql_sha256"] or len(data) != entry["sql_size"]:
         raise RuntimeError(
@@ -101,6 +110,14 @@ def apply_seed_augments(
     if provenance.is_file() and manifest_sha256 is not None:
         import json
         pinned = json.loads(provenance.read_text(encoding="utf-8"))
+        evidence = pinned.get("revalidation")
+        if evidence:
+            loader = ROOT / "native/playerbots/playerbot/RandomItemMgr.cpp"
+            loader_sha = hashlib.sha256(loader.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+            augment_sha = hashlib.sha256((augment_dir / "classiccharacters.sql.gz").read_bytes()).hexdigest()
+            if (loader_sha != evidence["loader_sha256"] or
+                    augment_sha != evidence["augmentation_sha256"]):
+                raise RuntimeError("seed-augment/PROVENANCE: audited cache loader or capture changed; revalidate before reuse")
         if pinned.get("manifest_sha256") != manifest_sha256:
             raise RuntimeError(
                 "seed-augment/PROVENANCE.json: the capture was taken "

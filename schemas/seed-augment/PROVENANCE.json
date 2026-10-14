@@ -1,13 +1,40 @@
 {
   "schema": 1,
   "description": "Binds the precomputed playerbot cache capture to the migrations manifest it was taken against. The world's cache-load branches have no version check; this file is the only staleness tripwire - a manifest advance must fail the seed until the capture is re-validated.",
-  "manifest_sha256": "3771fc35b4ceddbadd6f786d76b10902db319d07c7d6372156417e4e3d81dc68",
+  "manifest_sha256": "1f7a94139c0bd1fb1a8ea2719881868e7cefd698a69aa8b9c33800e658d7fdb1",
   "captured_from": "differential lane x86_64 emulator, first-boot world build of 2026-08-27 (run 20260827-172613 lineage)",
   "captured_at": "2026-08-28",
   "tables": [
     "ai_playerbot_rnditem_cache",
     "ai_playerbot_equip_cache"
   ],
-  "revalidated_at": "2026-09-06",
-  "revalidation_note": "Manifest advanced by 0414-playerbot-world-playerbot-texts-e2-register (idempotent hello/goodbye/hello_follow TEXT-row UPDATEs only; no schema change, no item/equipment corpus change). The equip/rnditem cache capture is semantically unaffected; host-side re-validation per the guard contract. A full device re-capture stays on the checklist for the next first-boot lane run. Manifest re-staged after the playerbots submodule pin bump (6c681ef8 -> 7e2cd2fb in source_commits; the 6c681ef8..7e2cd2fb range touches zero .sql files - entries and sql_sha256 values identical). Semantics unchanged from the 0414 revalidation: idempotent TEXT-row UPDATEs only; equip/rnditem capture unaffected. Full device re-capture stays on the qualification checklist. Manifest re-staged after comment-only edits to the 0413/0414 migration headers (SQL statements byte-identical; no schema, corpus, or statement-text change) - capture unaffected, host-side re-validation per the guard contract."
+  "revalidated_at": "2026-10-14",
+  "revalidation_note": "Source-only repin: all 414 records, SQL bytes and exact historical seed transcripts reproduced; all 1,109,982 cached item references resolve in the unchanged corpus, loader column contracts and Vanilla equipment bounds pass. Current loader and augmentation hashes now enforced. This validates reuse; new first-boot cache generation and device play remain unqualified.",
+  "revalidation": {
+    "capture_manifest_revision": "08b2a281a24774fdec78bb50f86ac4ec63d2c7bb",
+    "capture_manifest_sha256": "3771fc35b4ceddbadd6f786d76b10902db319d07c7d6372156417e4e3d81dc68",
+    "all_migration_records_identical": true,
+    "exact_seed_baseline_reproduced": true,
+    "transcript_digests": {
+      "classicrealmd": "cc6eabe3e0739271f2daf18da9e72528389bdf1845aadba5e623949dbbf08a58",
+      "classiccharacters": "6792fdb1eef2e0d80f7048a457a417484b97608212c29b2715ddf4cab7a5e829",
+      "classiclogs": "e3d37a73da95ed619d1ca28891826d2d6d57631e3bdfccee15c35a076cfa289e",
+      "classicmangos": "f2b8726c5167adc72fb8040169aa96dbf8846a3cd2c783232a4321753982afd6"
+    },
+    "tables": {
+      "ai_playerbot_rnditem_cache": {
+        "rows": 63440,
+        "missing_item_references": 0,
+        "loader_columns": "lvl, type, item"
+      },
+      "ai_playerbot_equip_cache": {
+        "rows": 1046542,
+        "missing_item_references": 0,
+        "loader_columns": "clazz, spec, lvl, slot, quality, item"
+      }
+    },
+    "invalid_equipment_rows": 0,
+    "loader_sha256": "9f65f51df74c78250d3141b8bcc1ca6fc37d4bf85142f55c45a3a1f2cdf1c18f",
+    "augmentation_sha256": "a9f64473319901a7d05cff9e75ed1ce8215b4471e3f26ac9c1819d2bdb96b51c"
+  }
 }
