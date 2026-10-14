@@ -142,3 +142,7 @@ unsloth_compiled_cache/
 native/win-deps/vcpkg_installed/
 # Windows native build trees
 native/.build-win-x86_64/
+
+# Replayed seed evidence and recovered, hash-pinned provider binaries.
+native/.seed-revalidation/
+native/llm/prebuilt/
