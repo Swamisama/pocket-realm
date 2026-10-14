@@ -5,8 +5,8 @@
   "elf_max_page_size": "0x4000",
   "playerbots": true,
   "auction_house_bot": false,
-  "cmangos_commit": "1d2c026013ed9d75f4449b1dcdbfe4900c08747c",
-  "playerbots_commit": "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a",
+  "cmangos_commit": "15d9293e772b9a825fc1d13be11554680b567e7d",
+  "playerbots_commit": "c66302ac8778ead1c6be21fb01091f203df8b7e0",
   "database_backend": "mysql",
   "cmangos_source_overlays": [
     {
@@ -282,8 +282,8 @@
   "artifacts": [
     {
       "path": "native/.build-o09-arm64-v8a/realm-staging/jniLibs/arm64-v8a/libpocket_realmd_runtime.so",
-      "size": 5464048,
-      "sha256": "733aed9b98446d65dcec9fcced0f45fc5661e28045676ecdb2104cf206655b72",
+      "size": 5464728,
+      "sha256": "83f06d6d0a013e4cabacb34a6d8c0c7804cf66604224eab560119a008e6dbb03",
       "needed": [
         "libc.so",
         "libdl.so",
@@ -298,8 +298,8 @@
     },
     {
       "path": "native/.build-o09-arm64-v8a/realm-staging/jniLibs/arm64-v8a/libpocket_world_runtime.so",
-      "size": 33295408,
-      "sha256": "220cd6919c98659024e90cf479ac470a8438d27ef3a02b5e736fd6edd68a79d1",
+      "size": 33294600,
+      "sha256": "8eb9ea16018f11c5789c8e0d6468d4d2face75b303c6054038f524e24230afe9",
       "needed": [
         "libc.so",
         "libdl.so",

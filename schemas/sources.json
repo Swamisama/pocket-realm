@@ -2,7 +2,7 @@
   "schema": 1,
   "reference_document": "docs/wiki/README.md",
   "description": "Pinned upstream source manifest for the Pocket Realm offline build. Every active entry has an exact commit, license, and redistribution verdict. This file governs source selection only.",
-  "updated": "2026-08-22 (sqlite-amalgamation pin for the gated SQLite lane)",
+  "updated": "2026-10-14 (Linux ARM64 baseline and actual native build provenance)",
   "toolchain": {
     "android_sdk_root_env": "ANDROID_SDK_ROOT / ANDROID_HOME (machine-local; not pinned here)",
     "ndk": {
@@ -30,7 +30,8 @@
       "playerbots_integration": "BUILD_PLAYERBOTS=ON; cmangos FetchContent (SOURCE_DIR form) reads native/playerbots mirrored into native/cmangos/src/modules/PlayerBots by build_native.py ensure_playerbots()",
       "emulator_test_abi": "x86_64 is the required development and integration ABI via the fixed Android AVD lanes. arm64-v8a remains the physical release ABI; any distributed x86 artifact must be explicitly declared by the release matrix.",
       "patches": "docs/patches/native-source-patches.md",
-      "database_dependency": "MariaDB 11.5.2 is source-built for the x86_64 glibc runtime by tools/build_mariadb_android.py; its exact provider and SQL ledgers are staged by the database tooling."
+      "database_dependency": "MariaDB 11.5.2 is source-built for the x86_64 glibc runtime by tools/build_mariadb_android.py; its exact provider and SQL ledgers are staged by the database tooling.",
+      "linux": "Real bash/Perl/GCC/Make and linux-x86_64 NDK tools; scripts/build_linux_arm64.sh; bounded native parallelism (default 2)."
     }
   },
   "sources": [
@@ -40,7 +41,7 @@
       "kind": "git-submodule",
       "upstream_url": "https://github.com/Swamisama/mangos-classic.git",
       "branch": "pocket-realm",
-      "commit": "1d2c026013ed9d75f4449b1dcdbfe4900c08747c",
+      "commit": "15d9293e772b9a825fc1d13be11554680b567e7d",
       "commit_date": "2026-09-18 (available Pocket Realm Android fork; source repin reviewed 2026-10-14)",
       "role": "Vanilla 1.12 game server core (mangosd + realmd). Built for x86_64 development and arm64-v8a release. The embeddable lifecycle is retained as library-lane evidence for the production component topology.",
       "o09_source_overlays": [
@@ -86,7 +87,7 @@
       "kind": "git-submodule",
       "upstream_url": "https://github.com/Swamisama/playerbots.git",
       "branch": "pocket-realm",
-      "commit": "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a",
+      "commit": "c66302ac8778ead1c6be21fb01091f203df8b7e0",
       "commit_date": "2026-09-18 (available Pocket Realm Android fork; source repin reviewed 2026-10-14)",
       "role": "Bot subsystem enabled only after the MariaDB-backed zero-bot gate; measured tiers and admission control are tracked with the bot feature.",
       "license": "GPL-2.0-or-later",
@@ -250,9 +251,18 @@
         "ndk": "30.0.15729638",
         "cmake": "4.1.2",
         "libsqlite3.a": {
-          "x86_64": "fb12d8b13f277aca8e97a0fd2459ea21c17d284e4251655a0f16c31d379e5e12",
-          "arm64-v8a": "d1cdd619e770dacbd958c8d5f21d229afb62136418e3823aa5445cf02e67b92f"
+          "x86_64": "55439da881493e2a6dc4594ffdc6d87c825659e0d6ef65ba7ad7d5aa0aa23765",
+          "arm64-v8a": "c0005533c693e044a55a9dd7b4659ad1956cc1e02ebd8111fa578cd0f2cdbd4e"
         }
+      },
+      "linux_build_evidence": {
+        "abi": "arm64-v8a",
+        "ndk": "30.0.15729638",
+        "cmake": "4.1.2",
+        "recipe": "native/sqlite/CMakeLists.txt",
+        "recipe_sha256": "150aea6f09b46a77aaf553591f95bcbc45451169280b38f24a3aec36dde9795c",
+        "clean_rebuild_byte_identical": true,
+        "additional_built_abi": "x86_64"
       }
     },
     {
@@ -371,6 +381,34 @@
       "redistribution": {
         "verdict": "host-toolchain-not-redistributed",
         "notes": "Used on the build host only; its output (pocket_selftest.exe) is project-owned LGPL-clean code and is redistributed as an authorized guest PE."
+      }
+    },
+    {
+      "id": "android-runtime-helper-shmem",
+      "kind": "vendored-source",
+      "path": "native/runtime-helpers/shmem",
+      "upstream_url": "https://github.com/termux/libandroid-shmem",
+      "commit": "447caef31c2d02a711770944d16f0fe8981e4600",
+      "role": "Original Android runtime helper ABI, source rebuilt with 16 KiB alignment; content pins in native/runtime-helpers/SOURCES.json.",
+      "license": "BSD-3-Clause",
+      "build_script": "tools/build_runtime_helpers.py",
+      "redistribution": {
+        "verdict": "source-redistributable",
+        "notes": "Full upstream license retained alongside the source and in APK third-party notices."
+      }
+    },
+    {
+      "id": "android-runtime-helper-sysv-sem",
+      "kind": "vendored-source",
+      "path": "native/runtime-helpers/sysv-sem",
+      "upstream_url": "https://github.com/termux/termux-packages",
+      "commit": "53253c20050a29d5d7663fd2690ac9a6c2a3466b",
+      "role": "Original Android runtime helper ABI, source rebuilt with 16 KiB alignment; content pins in native/runtime-helpers/SOURCES.json.",
+      "license": "BSD-2-Clause",
+      "build_script": "tools/build_runtime_helpers.py",
+      "redistribution": {
+        "verdict": "source-redistributable",
+        "notes": "Full upstream license retained alongside the source and in APK third-party notices."
       }
     }
   ],

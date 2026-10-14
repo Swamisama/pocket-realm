@@ -6399,12 +6399,13 @@ def configure_and_build(force: bool, backend: str = "mysql", configure_only: boo
     facade_stage = NATIVE / (".build-arm64" if TARGET_ABI == "arm64-v8a" else ".build-x86_64") / "pocket-runtime-build"
     facade_stage.mkdir(parents=True, exist_ok=True)
     shutil.copy2(facade, facade_stage / facade.name)
+    run([llvm / common._exe("llvm-strip"), "--strip-unneeded", facade_stage / facade.name])
     (facade_stage / "BUILD_PROVENANCE.json").write_text(json.dumps({
         "abi": TARGET_ABI, "cmangos_commit": CMANGOS_COMMIT,
         "playerbots_commit": PLAYERBOTS_COMMIT, "backend": backend,
         "build_tree": CMANGOS_BUILD.relative_to(ROOT).as_posix(),
         "artifact": {"path": (facade_stage / facade.name).relative_to(ROOT).as_posix(),
-                     "sha256": sha256(facade), "size": facade.stat().st_size},
+                     "sha256": sha256(facade_stage / facade.name), "size": (facade_stage / facade.name).stat().st_size},
     }, indent=2) + "\n", encoding="utf-8")
     if backend == "sqlite":
         # A SQLITE=ON build must carry zero mariadbclient
