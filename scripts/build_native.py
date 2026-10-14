@@ -5,7 +5,7 @@ This is the reproducible-build entry point for the native realm. It builds the e
 dependencies (OpenSSL, Boost, SQLite) and then CMaNGOS + Playerbots against the
 pinned NDK.
 
-Environment requirements (Windows host):
+Environment requirements: Linux host tools or Windows/MSYS2:
   - Android NDK (found via ANDROID_SDK_ROOT/ANDROID_HOME under SDK/ndk)
   - MSYS2 (found via MSYS2_ROOT/MSYS_HOME env, default C:/msys64). Provides a
     complete Unix-style perl for OpenSSL and a host gcc for the Boost b2
@@ -50,12 +50,12 @@ import common  # noqa: E402
 
 # MSYS2 location is environment-driven (MSYS2_ROOT -> conventional installs);
 # no developer-specific drive defaults.
-try:
+if os.name == "nt":
     MSYS2 = common.msys2_root()
-except RuntimeError as exc:
-    print(f"ERROR: {exc}", file=sys.stderr)
-    sys.exit(2)
-MSYS_BASH = MSYS2 / "usr" / "bin" / "bash.exe"
+    MSYS_BASH = MSYS2 / "usr/bin/bash.exe"
+else:
+    MSYS2 = Path("/usr")
+    MSYS_BASH = Path(shutil.which("bash") or "/bin/bash")
 
 try:
     SDK = common.resolve_android_sdk()
@@ -74,7 +74,7 @@ PLAYERBOTS_SUBMODULE = NATIVE / "playerbots"
 PLAYERBOTS_IN_TREE = NATIVE / "cmangos" / "src" / "modules" / "PlayerBots"
 # An NDK junction with a simple name avoids Windows 8.3 short-name path issues
 # in OpenSSL's toolchain detection. Created if missing.
-NDK_LINK = SDK / "ndk-link"
+NDK_LINK = SDK / "ndk-link" if os.name == "nt" else NDK
 TOOLCHAIN = NDK_LINK / "toolchains" / "llvm" / "prebuilt" / common.HOST_TAG
 API = 26
 # The embeddable realm lifecycle facade. Built as libpocketrealm.so from
@@ -119,10 +119,10 @@ def build_dir(arch: Arch) -> Path:
 
 CMAKE_DIR = SDK / "cmake"
 _CMAKE_VERSIONS = sorted([p.name for p in CMAKE_DIR.iterdir() if p.is_dir()], reverse=True)
-CMAKE_BIN = next((CMAKE_DIR / v / "bin" / "cmake.exe" for v in _CMAKE_VERSIONS
-                  if (CMAKE_DIR / v / "bin" / "cmake.exe").exists()), shutil.which("cmake"))
-NINJA = next((CMAKE_DIR / v / "bin" / "ninja.exe" for v in _CMAKE_VERSIONS
-              if (CMAKE_DIR / v / "bin" / "ninja.exe").exists()), shutil.which("ninja"))
+CMAKE_BIN = next((CMAKE_DIR / v / "bin" / common._exe("cmake") for v in _CMAKE_VERSIONS
+                  if (CMAKE_DIR / v / "bin" / common._exe("cmake")).exists()), shutil.which("cmake"))
+NINJA = next((CMAKE_DIR / v / "bin" / common._exe("ninja") for v in _CMAKE_VERSIONS
+              if (CMAKE_DIR / v / "bin" / common._exe("ninja")).exists()), shutil.which("ninja"))
 TOOLCHAIN_FILE = NDK_LINK / "build" / "cmake" / "android.toolchain.cmake"
 
 STAGES = ["openssl", "boost", "sqlite", "cmangos"]
@@ -188,6 +188,10 @@ def run_msys(script: str) -> int:
     `which clang` returns; otherwise OpenSSL's clang-detection regex misses and
     it dies looking for a NDK gcc.
     """
+    if os.name != "nt":
+        env = {**os.environ, "ANDROID_NDK_ROOT": str(NDK),
+               "PATH": f"{TOOLCHAIN / 'bin'}:{os.environ['PATH']}"}
+        return subprocess.call([str(MSYS_BASH), "-c", script], env=env)
     tc_bin = str(TOOLCHAIN / "bin").replace("\\", "/")
     env = {
         "ANDROID_NDK_ROOT": to_msys_path(NDK_LINK),
@@ -213,6 +217,8 @@ def ensure_ndk_link():
     is_junction, NOT is_symlink: Windows directory junctions made by `mklink /J`
     carry the mount-point reparse tag, so is_symlink() returns False for them.)
     """
+    if os.name != "nt":
+        return
     expected = os.path.realpath(NDK)
     # exists() follows the junction target; is_junction() catches a broken one
     # (a junction with its target uninstalled).
@@ -305,7 +311,7 @@ cd {msrc}
 perl Configure {ARCH.openssl_target} -D__ANDROID_API__={API} \
   --prefix={mprefix} --openssldir={mprefix}/ssl \
   no-shared no-tests no-asm
-make -j$(nproc)
+make -j{common.build_jobs()}
 make install_sw
 """
     return run_msys(script)
@@ -349,24 +355,14 @@ cd {msrc}
   link=static runtime-link=static threading=multi \\
   cxxflags=-fPIC cflags=-fPIC \\
   --with-program_options --with-thread --with-regex --with-serialization --with-filesystem --with-system \\
-  --prefix={mprefix} -j$(nproc) install
+  --prefix={mprefix} -j{common.build_jobs()} install
 """
     return run_msys(script)
 
 
 def sqlite() -> int:
-    src = DEPS_SRC / "sqlite"
-    build = src / f"build-{ARCH.triple}"
-    prefix = prefix_dir(ARCH)
-    cmd = [str(CMAKE_BIN), "-S", str(src), "-B", str(build),
-           f"-DCMAKE_TOOLCHAIN_FILE={TOOLCHAIN_FILE}",
-           f"-DANDROID_ABI={ARCH.abi}", f"-DANDROID_PLATFORM=android-{API}",
-           "-DANDROID_STL=c++_shared", "-G", "Ninja",
-           f"-DCMAKE_MAKE_PROGRAM={NINJA}",
-           f"-DCMAKE_INSTALL_PREFIX={prefix}"]
-    if run(cmd) != 0:
-        return 1
-    return run([str(CMAKE_BIN), "--build", str(build), "--target", "install"])
+    subprocess.run([sys.executable, str(ROOT / "tools/stage_sqlite_amalgamation.py"), "--abi", ARCH.abi], check=True)
+    return 0
 
 
 def cmangos() -> int:
@@ -408,7 +404,7 @@ def cmangos() -> int:
         cmd += ["-DBUILD_POCKET_RUNTIME_TESTS=ON"]
     if run(cmd) != 0:
         return 1
-    return run([str(CMAKE_BIN), "--build", str(build), "-j", str(os.cpu_count() or 4)])
+    return run([str(CMAKE_BIN), "--build", str(build), "-j", str(common.build_jobs())])
 
 
 def main() -> int:
@@ -435,7 +431,7 @@ def main() -> int:
         print(f"ABI: {ARCH.abi} (triple {ARCH.triple})")
         print(f"NDK: {NDK}")
         print(f"NDK link: {NDK_LINK}")
-        print(f"MSYS2: {MSYS2} ({'found' if MSYS_BASH.is_file() else 'NOT FOUND'})")
+        print(f"Host shell: {MSYS_BASH} ({'found' if MSYS_BASH.is_file() else 'NOT FOUND'})")
         print(f"Prefix: {prefix}")
         print(f"Pocket runtime: {'build libpocketrealm.so' if BUILD_RUNTIME else 'OFF (pass --runtime)'}")
         print(f"Pocket runtime tests: {'build pocket_lifecycle_test' if BUILD_RUNTIME_TESTS else 'OFF'}")
@@ -445,6 +441,8 @@ def main() -> int:
         ap.error(f"unrecognized stage(s): {' '.join(bad)}")
     stages = STAGES if "all" in args.stages else args.stages
 
+    if any(stage in ("openssl", "boost") for stage in stages):
+        subprocess.run([sys.executable, str(ROOT / "scripts/fetch_native_deps.py")], check=True)
     ensure_ndk_link()
     prefix.mkdir(parents=True, exist_ok=True)
     # Stages openssl/boost run inside MSYS2; fail early with a clear message

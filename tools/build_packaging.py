@@ -29,14 +29,14 @@ NATIVE = ROOT / "native"
 PKG_SRC = NATIVE / "packaging"
 SDK = common.resolve_android_sdk()
 NDK = common.resolve_android_ndk(sdk=SDK)
-NDK_LINK = SDK / "ndk-link"
+NDK_LINK = NDK
 TOOLCHAIN_FILE = NDK_LINK / "build" / "cmake" / "android.toolchain.cmake"
 CMAKE_DIR = SDK / "cmake"
 _V = sorted([p.name for p in CMAKE_DIR.iterdir() if p.is_dir()], reverse=True) if CMAKE_DIR.is_dir() else []
-CMAKE = next((CMAKE_DIR / v / "bin" / "cmake.exe" for v in _V
-              if (CMAKE_DIR / v / "bin" / "cmake.exe").exists()), None)
-NINJA = next((CMAKE_DIR / v / "bin" / "ninja.exe" for v in _V
-              if (CMAKE_DIR / v / "bin" / "ninja.exe").exists()), None)
+CMAKE = next((CMAKE_DIR / v / "bin" / common._exe("cmake") for v in _V
+              if (CMAKE_DIR / v / "bin" / common._exe("cmake")).exists()), None)
+NINJA = next((CMAKE_DIR / v / "bin" / common._exe("ninja") for v in _V
+              if (CMAKE_DIR / v / "bin" / common._exe("ninja")).exists()), None)
 
 ABIS = {"arm64-v8a": "arm64", "x86_64": "x86_64"}
 
@@ -75,7 +75,7 @@ def main() -> int:
     if rc != 0:
         return rc
     print("== build ==")
-    rc = subprocess.run([str(CMAKE), "--build", str(build), "--parallel"]).returncode
+    rc = subprocess.run([str(CMAKE), "--build", str(build), "--parallel", str(common.build_jobs())]).returncode
     if rc != 0:
         return rc
 

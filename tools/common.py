@@ -23,6 +23,7 @@ best-effort guess when the environment is not actually usable.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import shutil
 import stat
@@ -33,14 +34,41 @@ from typing import Sequence
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Host-tag and tool-name suffixes. The toolchain is developed on Windows;
-# centralizing the tag keeps a future Linux CI lane a one-line change.
-HOST_TAG = "windows-x86_64"
+# Host-tag and executable suffix follow the actual build machine.
+HOST_TAG = {"win32": "windows-x86_64", "linux": "linux-x86_64",
+            "darwin": "darwin-x86_64"}.get(sys.platform)
+if HOST_TAG is None:
+    raise RuntimeError(f"unsupported NDK build host: {sys.platform}")
 
 
 def _exe(name: str) -> str:
     """Host-suffixed executable name (adb.exe on Windows, adb elsewhere)."""
     return f"{name}.exe" if os.name == "nt" else name
+
+
+def build_jobs() -> int:
+    """Conservative default; callers can explicitly size the build for RAM."""
+    jobs = int(os.environ.get("POCKET_BUILD_JOBS", "2"))
+    if jobs < 1:
+        raise RuntimeError("POCKET_BUILD_JOBS must be positive")
+    return jobs
+
+
+def resolve_sdk_cmake(tool: str, sdk: Path | None = None) -> Path:
+    sdk = sdk or resolve_android_sdk()
+    pin = json.loads((ROOT / "schemas/sources.json").read_text())["toolchain"]["cmake"]["version"]
+    candidate = sdk / "cmake" / pin / "bin" / _exe(tool)
+    if not candidate.is_file():
+        raise RuntimeError(f"pinned SDK tool missing: {candidate}")
+    return candidate
+
+
+def resolve_ndk_tool(tool: str, ndk: Path | None = None) -> Path:
+    ndk = ndk or resolve_android_ndk()
+    candidate = ndk / "toolchains/llvm/prebuilt" / HOST_TAG / "bin" / _exe(tool)
+    if not candidate.is_file():
+        raise RuntimeError(f"NDK host tool missing: {candidate}")
+    return candidate
 
 
 def _search_env(*env_names: str) -> Path | None:

@@ -97,7 +97,7 @@ def configure(force: bool = False) -> tuple[Path, Path]:
     BUILD.mkdir(parents=True, exist_ok=True)
     toolchain = ndk / "build" / "cmake" / "android.toolchain.cmake"
     ndk_triple = "x86_64-linux-android" if TARGET_ABI == "x86_64" else "aarch64-linux-android"
-    zlib = ndk / "toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib" / ndk_triple / "26/libz.so"
+    zlib = ndk / f"toolchains/llvm/prebuilt/{common.HOST_TAG}/sysroot/usr/lib" / ndk_triple / "26/libz.so"
     boost_cmake = deps / "lib" / "cmake"
     boost_components = (
         "headers", "atomic", "filesystem", "program_options", "regex",
@@ -126,7 +126,7 @@ def configure(force: bool = False) -> tuple[Path, Path]:
         "-DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,max-page-size=16384",
     ])
     run([cmake, "--build", BUILD, "--target", "ad", "vmap_extractor", "vmap_assembler", "MoveMapGen",
-         "-j", str(os.cpu_count() or 4)])
+         "-j", str(common.build_jobs())])
     return llvm, cmake
 
 
@@ -141,7 +141,7 @@ def stage(llvm: Path) -> dict:
     missing = [str(path) for path in artifacts.values() if not path.is_file()]
     if missing:
         raise RuntimeError(f"extractor outputs missing: {missing}")
-    strip, readelf = llvm / "llvm-strip.exe", llvm / "llvm-readelf.exe"
+    strip, readelf = llvm / common._exe("llvm-strip"), llvm / common._exe("llvm-readelf")
     allowed = {"libc++_shared.so", "libc.so", "libdl.so", "libm.so", "libz.so"}
     records = []
     for target_name, source in artifacts.items():

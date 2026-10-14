@@ -54,7 +54,7 @@ PROOT_SRC = PROVIDERS / "proot-termux-a89b3732"
 TALLOC_SRC = PROVIDERS / "talloc-2.4.2"
 
 SDK = common.resolve_android_sdk()
-NDK = SDK / "ndk-link"
+NDK = common.resolve_android_ndk(sdk=SDK)
 TOOLCHAIN = NDK / "toolchains" / "llvm" / "prebuilt" / common.HOST_TAG
 BIN = TOOLCHAIN / "bin"
 SYSROOT = TOOLCHAIN / "sysroot"
@@ -114,7 +114,7 @@ def _tool(base: Path) -> str:
 def _ndk_clang(triple: str, api: int) -> tuple[str, str]:
     """Return (clang_exe_path, target_flag). Uses clang.exe directly with
     --target= rather than the per-target .cmd wrappers."""
-    clang = BIN / "clang.exe"
+    clang = BIN / common._exe("clang")
     if not clang.is_file():
         raise SystemExit(f"ERROR: NDK clang.exe not found at {clang}")
     return str(clang), f"--target={triple}-linux-android{api}"
@@ -349,34 +349,21 @@ def build_proot(triple: str, api: int, talloc_dir: Path, out_dir: Path) -> Path:
         awk_script = src_dir / "loader/loader-info.awk"
         loader_src = build_dir / "loader/loader"
         r = subprocess.run([readelf, "-s", loader_src], capture_output=True, text=True)
-        awk_executable = shutil.which("awk")
-        if awk_executable:
-            awk = subprocess.run([awk_executable, "-f", awk_script], input=r.stdout,
-                                  capture_output=True, text=True)
-            generated = awk.stdout if awk.returncode == 0 else ""
-        else:
-            # Windows developer hosts commonly have no awk. The pinned awk
-            # program only computes the offset between two ELF symbols, so
-            # reproduce that tiny transform in Python instead of requiring a
-            # second Unix shell/toolchain installation.
-            symbols: dict[str, int] = {}
-            for line in r.stdout.splitlines():
-                match = re.search(
-                    r"^\s*\d+:\s*([0-9a-fA-F]+)\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(\S+)",
-                    line,
-                )
-                if match and match.group(2) in {"_start", "pokedata_workaround"}:
-                    symbols[match.group(2)] = int(match.group(1), 16)
-            if "_start" not in symbols or "pokedata_workaround" not in symbols:
-                raise RuntimeError(
-                    "loader symbol table lacks _start/pokedata_workaround; "
-                    "cannot generate loader-info.c without awk"
-                )
-            generated = (
-                "#include <unistd.h>\n"
-                "const ssize_t offset_to_pokedata_workaround="
-                f"{symbols['pokedata_workaround'] - symbols['_start']};\n"
-            )
+        # Parse the two ELF symbols directly. Ubuntu's default mawk lacks
+        # GNU awk's strtonum/word boundaries used by loader-info.awk.
+        r.check_returncode()
+        symbols = {}
+        for line in r.stdout.splitlines():
+            fields = line.split()
+            if len(fields) >= 8 and fields[-1] in {"_start", "pokedata_workaround"}:
+                symbols[fields[-1]] = int(fields[1], 16)
+        if "_start" not in symbols or "pokedata_workaround" not in symbols:
+            raise RuntimeError("loader symbol table lacks _start/pokedata_workaround")
+        generated = (
+            "#include <unistd.h>\n"
+            "const ssize_t offset_to_pokedata_workaround="
+            f"{symbols['pokedata_workaround'] - symbols['_start']};\n"
+        )
         if not generated.strip():
             raise RuntimeError("loader-info.awk failed to produce loader-info.c")
         loader_info_c.write_text(generated)

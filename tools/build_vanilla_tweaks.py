@@ -119,14 +119,14 @@ def stage(built: Path, llvm: Path) -> dict:
     STAGE.mkdir(parents=True, exist_ok=True)
     target = STAGE / OUTPUT_NAME
     shutil.copy2(built, target)
-    strip = llvm / "llvm-strip.exe"
+    strip = llvm / common._exe("llvm-strip")
     if not strip.is_file():
         raise RuntimeError(
             f"llvm-strip not found at {strip}; DT_NEEDED/alignment verification "
             "must not be skipped silently"
         )
     run([strip, "--strip-unneeded", target])
-    readelf = llvm / "llvm-readelf.exe"
+    readelf = llvm / common._exe("llvm-readelf")
     needed = []
     aligns: list[int] = []
     if not readelf.is_file():

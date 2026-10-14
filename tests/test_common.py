@@ -41,6 +41,27 @@ def test_exe_suffix():
         assert common._exe("adb") == "adb"
 
 
+def test_ndk_tool_requires_the_native_host_executable(tmp_path):
+    bindir = tmp_path / "toolchains/llvm/prebuilt" / common.HOST_TAG / "bin"
+    bindir.mkdir(parents=True)
+    tool = bindir / common._exe("llvm-readelf")
+    tool.write_text("test tool")
+    assert common.resolve_ndk_tool("llvm-readelf", tmp_path) == tool
+    tool.unlink()
+    with pytest.raises(RuntimeError, match="NDK host tool missing"):
+        common.resolve_ndk_tool("llvm-readelf", tmp_path)
+
+
+def test_native_parallelism_is_bounded_and_explicit(monkeypatch):
+    monkeypatch.delenv("POCKET_BUILD_JOBS", raising=False)
+    assert common.build_jobs() == 2
+    monkeypatch.setenv("POCKET_BUILD_JOBS", "3")
+    assert common.build_jobs() == 3
+    monkeypatch.setenv("POCKET_BUILD_JOBS", "0")
+    with pytest.raises(RuntimeError, match="positive"):
+        common.build_jobs()
+
+
 def test_search_env_ignores_empty_string():
     os.environ["PR_TEST_EMPTY"] = ""
     os.environ["PR_TEST_SET"] = str(ROOT)

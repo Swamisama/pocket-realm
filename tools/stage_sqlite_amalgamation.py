@@ -33,6 +33,11 @@ SOURCES = ROOT / "schemas" / "sources.json"
 SRC = NATIVE / ".deps" / "src" / "sqlite"
 ENTRY_ID = "sqlite-amalgamation-3460100"
 API = 26
+try:
+    from tools import common
+except ImportError:
+    import common
+RECIPE = NATIVE / "sqlite" / "CMakeLists.txt"
 
 
 def sha256_file(path: Path) -> str:
@@ -44,29 +49,11 @@ def sha256_file(path: Path) -> str:
 
 
 def sdk_tools(abi: str) -> tuple[Path, Path, Path, Path]:
-    """Env-first SDK discovery, identical precedence to the o09 driver."""
-    import os
-
-    configured = os.environ.get("ANDROID_SDK_ROOT") or os.environ.get("ANDROID_HOME")
-    if not configured:
-        properties = ROOT / "android" / "local.properties"
-        if not properties.is_file():
-            raise SystemExit("Android SDK not found (set ANDROID_SDK_ROOT)")
-        for line in properties.read_text(encoding="utf-8").splitlines():
-            if line.startswith("sdk.dir="):
-                configured = line.split("=", 1)[1].replace("\\:", ":").replace("\\\\", "\\")
-    if not configured:
-        raise SystemExit("Android SDK not found (set ANDROID_SDK_ROOT)")
-    sdk = Path(configured)
-    ndks = sorted(path for path in (sdk / "ndk").glob("*") if path.is_dir())
-    cmakes = sorted(path for path in (sdk / "cmake").glob("*") if path.is_dir())
-    if not ndks or not cmakes:
-        raise SystemExit("NDK/CMake missing from the Android SDK")
-    ndk = ndks[-1]
-    cmake = cmakes[-1] / "bin" / "cmake.exe"
-    ninja = cmakes[-1] / "bin" / "ninja.exe"
-    toolchain = ndk / "build" / "cmake" / "android.toolchain.cmake"
-    return cmake, ninja, toolchain, ndk
+    sdk = common.resolve_android_sdk()
+    ndk = common.resolve_android_ndk(sdk=sdk)
+    return (common.resolve_sdk_cmake("cmake", sdk),
+            common.resolve_sdk_cmake("ninja", sdk),
+            ndk / "build/cmake/android.toolchain.cmake", ndk)
 
 
 def entry() -> dict:
@@ -95,11 +82,10 @@ def ensure_cached(entry_data: dict) -> Path:
 
 def stage_sources(entry_data: dict, archive: Path) -> Path:
     """Extract the amalgamation next to the recipe and verify content hashes."""
+    SRC.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(RECIPE, SRC / "CMakeLists.txt")
     expected_dir = SRC / entry_data["artifact"].removesuffix(".zip")
     marker = SRC / ".pocket-realm-amalgamation-sha"
-    if marker.is_file() and marker.read_text(encoding="utf-8").strip() == entry_data["artifact_sha256"] \
-            and expected_dir.is_dir():
-        return expected_dir
     for name, expected in entry_data["content_sha256"].items():
         target = expected_dir / name
         if not target.is_file():
@@ -137,7 +123,7 @@ def build(abi: str) -> Path:
                     "-DANDROID_STL=c++_shared", "-G", "Ninja",
                     f"-DCMAKE_MAKE_PROGRAM={ninja}",
                     f"-DCMAKE_INSTALL_PREFIX={prefix}"], check=True)
-    subprocess.run([str(cmake), "--build", str(build_dir), "--target", "install"], check=True)
+    subprocess.run([str(cmake), "--build", str(build_dir), "--target", "install", "--parallel", str(common.build_jobs())], check=True)
     library = prefix / "lib" / "libsqlite3.a"
     if not library.is_file():
         raise SystemExit(f"libsqlite3.a missing after build: {library}")

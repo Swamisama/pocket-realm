@@ -105,6 +105,7 @@ ARM_CROSS_PACKAGES = (
     "gcc-aarch64-linux-gnu=4:15.2.0-5ubuntu1",
     "libc6-dev-arm64-cross=2.43-2ubuntu2cross1",
     "libx11-dev:arm64=2:1.8.13-1",
+    "libx11-6:arm64=2:1.8.13-1",
 )
 WINLATOR_ROOTFS = (
     ROOT / "native" / ".providers-extracted" / "winlator-app-ca3d735" /

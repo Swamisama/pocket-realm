@@ -45,6 +45,7 @@ BUILD_PACKAGES = (
     "binutils-aarch64-linux-gnu=2.42-4ubuntu2.10",
     "libc6-dev-arm64-cross=2.39-0ubuntu8cross1",
     "libx11-dev=2:1.8.7-1build1",
+    "libx11-6=2:1.8.7-1build1",
     "libvulkan-dev=1.3.275.0-1build1",
 )
 EXPECTED_SIZE = VORTEK_LIBRARY["size"]

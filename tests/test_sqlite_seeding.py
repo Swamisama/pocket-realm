@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import sqlite3
@@ -759,12 +760,12 @@ def test_transcripts_execute_under_the_pinned_amalgamation(
     if not (AMALGAMATION / "sqlite3.c").is_file():
         pytest.skip("amalgamation not staged (run "
                     "tools/stage_sqlite_amalgamation.py)")
-    binary = tmp_path / "sqlite_exec_file.exe"
+    binary = tmp_path / ("sqlite_exec_file.exe" if os.name == "nt" else "sqlite_exec_file")
     build = subprocess.run(
         [gcc, "-O2", *PRODUCTION_DEFINES,
          "-I", str(AMALGAMATION), "-o", str(binary),
          str(AMALGAMATION / "sqlite3.c"),
-         str(EXECUTOR_SRC)],
+         str(EXECUTOR_SRC), *([] if os.name == "nt" else ["-lm"])],
         capture_output=True, text=True, timeout=900)
     if build.returncode != 0:
         pytest.fail(f"host compile failed:\n{build.stderr[:2000]}")
