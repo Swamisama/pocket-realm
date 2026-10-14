@@ -34,8 +34,8 @@ PROVENANCE = BUILD / "realm-staging" / "BUILD_PROVENANCE.json"
 LOCKFILE = ROOT / "schemas" / "realm-runtime-lockfile.json"
 CONNECTOR_URL = "https://github.com/MariaDB/mariadb-connector-c.git"
 CONNECTOR_COMMIT = "de6305915f86bb33c83b1fe782a2b8a76920aec1"
-CMANGOS_COMMIT = "1d2c026013ed9d75f4449b1dcdbfe4900c08747c"
-PLAYERBOTS_COMMIT = "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a"
+CMANGOS_COMMIT = "15d9293e772b9a825fc1d13be11554680b567e7d"
+PLAYERBOTS_COMMIT = "c66302ac8778ead1c6be21fb01091f203df8b7e0"
 MAX_PAGE = 0x4000
 BACKEND = "mysql"
 
@@ -5635,16 +5635,13 @@ def sdk_root() -> Path:
 
 def tools() -> tuple[Path, Path, Path, Path]:
     sdk = sdk_root()
-    ndks = sorted(path for path in (sdk / "ndk").glob("*") if path.is_dir())
-    cmakes = sorted(path for path in (sdk / "cmake").glob("*") if path.is_dir())
-    if not ndks or not cmakes:
-        raise RuntimeError("NDK/CMake missing from Android SDK")
-    ndk, cmake_root = ndks[-1], cmakes[-1]
+    ndk = common.resolve_android_ndk(sdk=sdk, prefer_version="30.0.15729638")
+    cmake_root = common.resolve_sdk_cmake("cmake", sdk).parent.parent
     # The fail-loud backend overlay uses `if(DEFINED CACHE{VAR})`, which
     # requires CMake >= 3.21; on an older cmake it degrades silently to a
     # non-firing check - the guard's own failure mode would be quiet.
     try:
-        cmake_version = output([cmake_root / "bin" / "cmake.exe", "--version"]).split()[2]
+        cmake_version = output([cmake_root / "bin" / common._exe("cmake"), "--version"]).split()[2]
         cmake_major_minor = tuple(int(part) for part in cmake_version.split(".")[:2])
     except (IndexError, ValueError):
         raise RuntimeError(f"cannot parse cmake version for {cmake_root}")
@@ -5652,8 +5649,8 @@ def tools() -> tuple[Path, Path, Path, Path]:
         raise RuntimeError(
             f"cmake {cmake_version} at {cmake_root} is older than 3.21; the "
             "fail-loud backend selection overlay would silently not fire")
-    bin_dir = ndk / "toolchains" / "llvm" / "prebuilt" / "windows-x86_64" / "bin"
-    return ndk, cmake_root / "bin" / "cmake.exe", cmake_root / "bin" / "ninja.exe", bin_dir
+    bin_dir = ndk / "toolchains" / "llvm" / "prebuilt" / common.HOST_TAG / "bin"
+    return ndk, cmake_root / "bin" / common._exe("cmake"), cmake_root / "bin" / common._exe("ninja"), bin_dir
 
 
 def replace_anchor(path: Path, old: str, new: str) -> None:
@@ -6261,12 +6258,12 @@ def configure_and_build(force: bool, backend: str = "mysql", configure_only: boo
             CONNECTOR_BUILD.mkdir(parents=True, exist_ok=True)
             toolchain = ndk / "build" / "cmake" / "android.toolchain.cmake"
             ndk_triple = "x86_64-linux-android" if TARGET_ABI == "x86_64" else "aarch64-linux-android"
-            zlib = ndk / "toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib" / ndk_triple / "26/libz.so"
-            common = ["-G", "Ninja", f"-DCMAKE_MAKE_PROGRAM={ninja}",
+            zlib = ndk / f"toolchains/llvm/prebuilt/{common.HOST_TAG}/sysroot/usr/lib" / ndk_triple / "26/libz.so"
+            cmake_args = ["-G", "Ninja", f"-DCMAKE_MAKE_PROGRAM={ninja}",
                       f"-DCMAKE_TOOLCHAIN_FILE={toolchain}", f"-DANDROID_ABI={TARGET_ABI}",
                       "-DANDROID_PLATFORM=android-26", "-DCMAKE_BUILD_TYPE=Release",
                       "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"]
-            run([cmake, "-S", SOURCE, "-B", CONNECTOR_BUILD, *common,
+            run([cmake, "-S", SOURCE, "-B", CONNECTOR_BUILD, *cmake_args,
                  "-DWITH_SSL=OPENSSL", f"-DOPENSSL_ROOT_DIR={deps}",
                  f"-DOPENSSL_INCLUDE_DIR={deps / 'include'}",
                  f"-DOPENSSL_SSL_LIBRARY={deps / 'lib' / 'libssl.a'}",
@@ -6274,7 +6271,7 @@ def configure_and_build(force: bool, backend: str = "mysql", configure_only: boo
                  "-DWITH_CURL=OFF", "-DWITH_DYNCOL=OFF", "-DWITH_UNIT_TESTS=OFF",
                  "-DWITH_MYSQLCOMPAT=OFF",
                  "-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -Wno-error=deprecated-non-prototype"])
-            run([cmake, "--build", CONNECTOR_BUILD, "--target", "mariadbclient", "-j", str(os.cpu_count() or 4)])
+            run([cmake, "--build", CONNECTOR_BUILD, "--target", "mariadbclient", "-j", str(common.build_jobs())])
             if not connector.is_file():
                 raise RuntimeError("Connector/C static library missing after build")
     if force:
@@ -6305,8 +6302,8 @@ def configure_and_build(force: bool, backend: str = "mysql", configure_only: boo
         ]
     toolchain = ndk / "build" / "cmake" / "android.toolchain.cmake"
     ndk_triple = "x86_64-linux-android" if TARGET_ABI == "x86_64" else "aarch64-linux-android"
-    zlib = ndk / "toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib" / ndk_triple / "26/libz.so"
-    common = ["-G", "Ninja", f"-DCMAKE_MAKE_PROGRAM={ninja}",
+    zlib = ndk / f"toolchains/llvm/prebuilt/{common.HOST_TAG}/sysroot/usr/lib" / ndk_triple / "26/libz.so"
+    cmake_args = ["-G", "Ninja", f"-DCMAKE_MAKE_PROGRAM={ninja}",
               f"-DCMAKE_TOOLCHAIN_FILE={toolchain}", f"-DANDROID_ABI={TARGET_ABI}",
               "-DANDROID_PLATFORM=android-26", "-DCMAKE_BUILD_TYPE=Release",
               "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"]
@@ -6344,7 +6341,7 @@ def configure_and_build(force: bool, backend: str = "mysql", configure_only: boo
         if backend == "sqlite":
             legacy_cache_cleanup += ["-UMYSQL_INCLUDE_DIR", "-UMYSQL_LIBRARY",
                                      "-UMYSQL_EXTRA_LIBRARIES"]
-    capture = run_capture([cmake, "-S", cmangos, "-B", CMANGOS_BUILD, *common,
+    capture = run_capture([cmake, "-S", cmangos, "-B", CMANGOS_BUILD, *cmake_args,
          *legacy_cache_cleanup,
          "-DBUILD_GAME_SERVER=ON", "-DBUILD_LOGIN_SERVER=ON", "-DBUILD_SCRIPTDEV=ON",
          "-DBUILD_EXTRACTORS=OFF", "-DBUILD_PLAYERBOTS=ON", "-DBUILD_AHBOT=OFF",
@@ -6394,8 +6391,21 @@ def configure_and_build(force: bool, backend: str = "mysql", configure_only: boo
         print(f"configure-only: backend={backend} verified in {CMANGOS_BUILD}")
         return llvm, cmake
     run([cmake, "--build", CMANGOS_BUILD, "--target", "pocket_realmd_runtime",
-         "pocket_world_runtime", "-j",
-         str(os.environ.get("POCKET_BUILD_JOBS") or (os.cpu_count() or 4))])
+         "pocket_world_runtime", "pocketrealm", "-j",
+         str(common.build_jobs())])
+    facade = CMANGOS_BUILD / "legacy-pocket-runtime-build/libpocketrealm.so"
+    if not facade.is_file():
+        raise RuntimeError("legacy lifecycle facade missing after build")
+    facade_stage = NATIVE / (".build-arm64" if TARGET_ABI == "arm64-v8a" else ".build-x86_64") / "pocket-runtime-build"
+    facade_stage.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(facade, facade_stage / facade.name)
+    (facade_stage / "BUILD_PROVENANCE.json").write_text(json.dumps({
+        "abi": TARGET_ABI, "cmangos_commit": CMANGOS_COMMIT,
+        "playerbots_commit": PLAYERBOTS_COMMIT, "backend": backend,
+        "build_tree": CMANGOS_BUILD.relative_to(ROOT).as_posix(),
+        "artifact": {"path": (facade_stage / facade.name).relative_to(ROOT).as_posix(),
+                     "sha256": sha256(facade), "size": facade.stat().st_size},
+    }, indent=2) + "\n", encoding="utf-8")
     if backend == "sqlite":
         # A SQLITE=ON build must carry zero mariadbclient
         # references anywhere in the link. No staging
@@ -6445,7 +6455,7 @@ def verify_sqlite_link_purity(llvm: Path) -> dict:
         raise RuntimeError(
             "sqlite link purity: the pinned amalgamation library does not "
             "appear in the build graph; the check would pass vacuously")
-    nm = llvm / "llvm-nm.exe"
+    nm = llvm / common._exe("llvm-nm")
     evidence = {}
     for name in ("libpocket_realmd_runtime.so", "libpocket_world_runtime.so"):
         binary = CMANGOS_BUILD / "pocket-runtime-build" / name
@@ -6576,8 +6586,8 @@ def stage(llvm: Path) -> dict:
     provenance = stage_root / "BUILD_PROVENANCE.json"
     stage.mkdir(parents=True, exist_ok=True)
     records = []
-    readelf = llvm / "llvm-readelf.exe"
-    strip = llvm / "llvm-strip.exe"
+    readelf = llvm / common._exe("llvm-readelf")
+    strip = llvm / common._exe("llvm-strip")
     allowed = {"libz.so", "libdl.so", "libm.so", "libc++_shared.so", "libc.so"}
     if TARGET_ABI == "arm64-v8a":
         allowed |= {"libllama.so", "libllama-common.so", "libggml.so", "libggml-base.so", "libggml-cpu.so"}

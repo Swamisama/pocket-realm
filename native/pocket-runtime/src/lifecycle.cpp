@@ -10,6 +10,7 @@
 // data, we classify it as a client-data gate (not a fatal startup error) so
 // the realm can report BLOCKED_ON_CLIENT_DATA honestly rather than FAILED.
 #include "lifecycle.h"
+#include "first_tick_fence.h"
 #include "embed.h"
 
 #include "pocket_realm.h"
@@ -150,7 +151,18 @@ lifecycle_result start_world_machinery(world_session** out,
         ws->world_started = true;
 
         // Past the gates: start the world thread + loopback listeners.
-        sMaster.StartNetworkEmbedded(world_threads);
+#if defined(POCKET_LEGACY_FIRST_TICK_GATE)
+        pocket_legacy_first_tick_reset();
+#endif
+        if (!sMaster.StartNetworkEmbedded(world_threads))
+        {
+            conditions[REALM_COND_WORLD_LOOP_RUNNING] = REALM_COND_FALSE;
+            conditions[REALM_COND_LOCAL_ENDPOINTS_LISTENING] = REALM_COND_FALSE;
+            conditions[REALM_COND_BOT_SUBSYSTEM_INITIALIZED] = REALM_COND_FALSE;
+            r.err = REALM_E_INTERNAL;
+            r.detail = "Master::StartNetworkEmbedded failed (first tick or listener)";
+            return r;
+        }
         conditions[REALM_COND_WORLD_LOOP_RUNNING] = REALM_COND_TRUE;
         conditions[REALM_COND_LOCAL_ENDPOINTS_LISTENING] = REALM_COND_TRUE;
         conditions[REALM_COND_BOT_SUBSYSTEM_INITIALIZED] = REALM_COND_TRUE;

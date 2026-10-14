@@ -154,3 +154,40 @@ endif()
 
 set_target_properties(pocket_realmd_runtime PROPERTIES OUTPUT_NAME pocket_realmd_runtime)
 set_target_properties(pocket_world_runtime PROPERTIES OUTPUT_NAME pocket_world_runtime)
+
+# The full APK also carries the original lifecycle facade. Reuse this build's
+# exact game/shared/Playerbots inputs instead of compiling a second, potentially
+# different core via the legacy standalone SQLite bootstrap.
+if(ANDROID)
+    add_subdirectory(${POCKET_SERVER_ROOT}/../pocket-runtime
+        ${CMAKE_BINARY_DIR}/legacy-pocket-runtime-build)
+    # Master's shared first-tick listener gate needs a completion signal in
+    # each facade. Adapt the pinned original loop with one checked insertion;
+    # retain its gameplay update, sleep cadence and Android purge behavior.
+    file(READ "${CMANGOS_SRC}/mangosd/WorldRunnable.cpp" LEGACY_LOOP)
+    string(REGEX MATCHALL "sWorld.Update\\(diffTick\\)" LEGACY_TICK_SITES "${LEGACY_LOOP}")
+    list(LENGTH LEGACY_TICK_SITES LEGACY_TICK_COUNT)
+    if(NOT LEGACY_TICK_COUNT EQUAL 1)
+        message(FATAL_ERROR "Legacy world first-tick anchor drift")
+    endif()
+    string(REPLACE "sWorld.Update(diffTick);"
+        "sWorld.Update(diffTick);\n        pocket_legacy_first_tick_complete();" LEGACY_LOOP "${LEGACY_LOOP}")
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/legacy_world_runnable.cpp"
+        "extern \"C\" void pocket_legacy_first_tick_complete();\n${LEGACY_LOOP}")
+    get_target_property(LEGACY_SOURCES pocketrealm SOURCES)
+    list(REMOVE_ITEM LEGACY_SOURCES "${CMANGOS_SRC}/mangosd/WorldRunnable.cpp")
+    set_property(TARGET pocketrealm PROPERTY SOURCES ${LEGACY_SOURCES})
+    target_sources(pocketrealm PRIVATE
+        "${CMAKE_CURRENT_BINARY_DIR}/legacy_world_runnable.cpp"
+        "${POCKET_SERVER_ROOT}/../pocket-runtime/src/first_tick_fence.cpp")
+    target_compile_definitions(pocketrealm PRIVATE POCKET_LEGACY_FIRST_TICK_GATE)
+    target_link_libraries(pocketrealm PRIVATE ${POCKET_DB_LIBS}
+        OpenSSL::SSL OpenSSL::Crypto ${POCKET_PLATFORM_LIBS})
+    if(BUILD_PLAYERBOTS)
+        target_compile_definitions(pocketrealm PRIVATE ENABLE_PLAYERBOTS)
+    endif()
+    if(POCKETREALM_LLAMA)
+        target_link_directories(pocketrealm PRIVATE ${POCKETREALM_LLAMA_PREBUILT})
+        target_link_libraries(pocketrealm PRIVATE llama llama-common ggml ggml-base ggml-cpu)
+    endif()
+endif()
