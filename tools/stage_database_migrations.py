@@ -14,6 +14,7 @@ import re
 import shutil
 import subprocess
 import argparse
+from functools import lru_cache
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -59,11 +60,44 @@ def git_commit(path: Path) -> str:
     ).strip()
 
 
+@lru_cache(maxsize=4)
+def recorded_sql_pins(manifest: Path) -> dict[str, str]:
+    if not manifest.is_file():
+        return {}
+    return {
+        entry["source_path"]: entry["sql_sha256"]
+        for entry in json.loads(manifest.read_text(encoding="utf-8"))["entries"]
+    }
+
+
+def preserve_sql_bytes(data: bytes, expected_sha256: str | None) -> bytes:
+    """Keep shipped ledger bytes across Git's Windows/Linux text conversion.
+
+    Existing SQL is immutable: only a line-ending conversion proven by its
+    recorded hash is accepted. New entries use LF on every build host.
+    """
+    lf = data.replace(b"\r\n", b"\n")
+    if expected_sha256 is None:
+        return lf
+    for candidate in (data, lf, lf.replace(b"\n", b"\r\n")):
+        if hashlib.sha256(candidate).hexdigest() == expected_sha256:
+            return candidate
+    raise RuntimeError("SQL content differs from its shipped migration hash; append a new migration")
+
+
 def sql_bytes(path: Path) -> bytes:
     if path.suffix == ".gz":
         with gzip.open(path, "rb") as stream:
-            return stream.read()
-    return path.read_bytes()
+            data = stream.read()
+    else:
+        data = path.read_bytes()
+    relative = path.relative_to(ROOT).as_posix()
+    return preserve_sql_bytes(data, recorded_sql_pins(SCHEMA_OUT).get(relative))
+
+
+def migration_order(path: Path) -> str:
+    """Match the original Windows discovery order, independently of host OS."""
+    return path.as_posix().casefold()
 
 
 def sha256(data: bytes) -> str:
@@ -80,11 +114,11 @@ def select_inputs() -> list[Input]:
         Input("logs", cmangos / "sql/base/logs.sql"),
         Input("world", classic / "Full_DB/ClassicDB_1_12_1_z2815.sql.gz"),
     ]
-    classic_updates = sorted((classic / "Updates").glob("[0-9]*.sql"))
+    classic_updates = sorted((classic / "Updates").glob("[0-9]*.sql"), key=migration_order)
     selected.extend(Input("world", p) for p in classic_updates)
     selected.extend(
         Input("world", p)
-        for p in sorted((classic / "Updates/Instances").glob("[0-9]*.sql"))
+        for p in sorted((classic / "Updates/Instances").glob("[0-9]*.sql"), key=migration_order)
     )
     # Classic-DB's numbered updates carry their own CMaNGOS core-sync steps.
     # Find the highest world revision those pinned files already install and
@@ -97,20 +131,20 @@ def select_inputs() -> list[Input]:
     )
     selected.extend(
         Input("world", p)
-        for p in sorted((cmangos / "sql/updates/mangos").glob("z*.sql"))
+        for p in sorted((cmangos / "sql/updates/mangos").glob("z*.sql"), key=migration_order)
         if int(p.name[1:5]) > integrated_core_revision
     )
     selected.extend(
         Input("playerbot-characters", p)
-        for p in sorted((bots / "sql/characters").glob("*.sql"))
+        for p in sorted((bots / "sql/characters").glob("*.sql"), key=migration_order)
     )
     selected.extend(
         Input("playerbot-world", p)
-        for p in sorted((bots / "sql/world").glob("*.sql"))
+        for p in sorted((bots / "sql/world").glob("*.sql"), key=migration_order)
     )
     selected.extend(
         Input("playerbot-world", p)
-        for p in sorted((bots / "sql/world/classic").glob("*.sql"))
+        for p in sorted((bots / "sql/world/classic").glob("*.sql"), key=migration_order)
     )
     # ClassicDB's full installer applies these mandatory CMaNGOS/content
     # layers after the numbered content/core updates.  In particular,
@@ -121,15 +155,15 @@ def select_inputs() -> list[Input]:
     # app-private database can repair itself without replaying old entries.
     selected.extend(
         Input("world", p)
-        for p in sorted((cmangos / "sql/base/dbc/original_data").glob("*.sql"))
+        for p in sorted((cmangos / "sql/base/dbc/original_data").glob("*.sql"), key=migration_order)
     )
     selected.extend(
         Input("world", p)
-        for p in sorted((cmangos / "sql/base/dbc/cmangos_fixes").glob("*.sql"))
+        for p in sorted((cmangos / "sql/base/dbc/cmangos_fixes").glob("*.sql"), key=migration_order)
     )
     selected.extend(
         Input("world", p)
-        for p in sorted((cmangos / "sql/scriptdev2").glob("*.sql"))
+        for p in sorted((cmangos / "sql/scriptdev2").glob("*.sql"), key=migration_order)
     )
     selected.append(Input("world", classic / "ACID/acid_classic.sql"))
     selected.append(Input("world", classic / "utilities/cmangos_custom.sql"))
