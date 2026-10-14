@@ -5,6 +5,11 @@ target is an ARM64 Android APK built on Linux, followed by a measured device
 baseline. Gameplay modules and balancing integration remain deferred until
 that baseline works. This branch is not yet a qualified APK release.
 
+The current scope and resume checklist are in [CHECKPOINT.md](CHECKPOINT.md).
+The feature build must include full Balancing, Hardcore, Transmog and Dual
+Spec. Bots may inherit balancing changes without needing to use the new spells;
+Classless remains optional future work.
+
 ## Source ownership and lineage
 
 - App: https://github.com/Swamisama/pocket-realm

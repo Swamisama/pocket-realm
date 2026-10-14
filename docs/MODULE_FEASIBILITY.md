@@ -6,11 +6,13 @@ CMaNGOS `1d2c026013ed9d75f4449b1dcdbfe4900c08747c` and Playerbots
 This is source inspection and a patch dry run, not an Android compilation or
 device compatibility result. No module was applied to the baseline.
 
-The user's current requirements are Hardcore, Transmog, Dual Spec, the entire
-Balancing module for human players while bots retain vanilla behavior, and
-potentially human-only Classless. Full Balancing remains the first requested
-gameplay integration after a working baseline; its scope must not be narrowed
-to one class. Classless coexistence with normal characters is not assumed.
+The user's current requirements are Hardcore, Transmog, Dual Spec and the entire
+Balancing module. Bots may inherit shared balancing changes and need not learn
+or use extra spells; human-only balancing isolation is no longer required.
+Potentially human-only Classless remains optional. Full Balancing remains the
+first requested gameplay integration after a working baseline; its scope must
+not be narrowed to one class. Classless coexistence with normal characters is
+not assumed. See the current [checkpoint](../CHECKPOINT.md).
 
 ## Assessment
 
@@ -22,7 +24,7 @@ ported and qualified. None is a switch available in our present core.
 | Dual Spec | Lower–moderate | NPC/item gossip, talent/spell switching, four character tables, per-spec action bars, world SQL and config. README does not require a client MPQ/addon. | Existing guards skip free bots, which is narrower than all bot-controlled characters. Check owned/alt bots and strengthen eligibility. |
 | Transmog | Moderate | Appearance/equipment hooks, discovered/active appearance tables, world NPC data, config and the included 1.12 addon. | Already skips free bots at many hooks; audit all command and save/load paths for the same human-only policy. Cosmetics should not change combat stats. |
 | Hardcore | Moderate | Death/resurrection hooks, persistent per-character challenge settings, death logs, optional dropped loot/graves, config and SQL. Client patch adds challenge/self-found auras. | Source explicitly lets bots revive and provides separate bot drop rates. Keep those rates zero unless requested. Self-found/group restrictions must be configured to allow intended companion play. |
-| Full Balancing, human-only | High | Shared spell-data isolation, custom effects/procs, all affected classes, books and loot, SQL, locale-specific client MPQ/DBC changes and human eligibility rules. | Current module has no human-only setting or bot guard; its SQL overwrites shared vanilla spell definitions. Excluding bot callbacks alone cannot preserve vanilla bots. |
+| Full Balancing, shared with bots | Moderate–high | Custom effects/procs, all affected classes, books and loot, SQL, locale-specific client MPQ/DBC changes and bot compatibility testing. | Shared spell changes are acceptable. Bot stability matters; learning/using extra spells is optional. No human-only isolation is required. |
 | Classless, human-only | High / experimental | Finish and repair implementation, human eligibility, optional per-character enrollment, skill/spell/talent and resource rules, discovery content, addon and persistence design. | Human checks exist, but contain source-level compile problems. Current global enable applies to eligible humans generally; no durable character opt-in was found. |
 
 Sources: [framework](https://github.com/flekz-games/cmangos-modules),
@@ -67,7 +69,15 @@ new character tables in backup/restore and persistence checks. The currently
 selected MariaDB lane should be qualified first; SQLite compatibility is a
 separate task rather than an implied side effect.
 
-## Human-only Balancing is a custom adaptation
+## Balancing scope and optional human-only isolation
+
+Current plan: integrate normal shared balancing behavior and verify bot
+compatibility. Bots are allowed to benefit from modified existing spells and
+talents without using extra abilities. No confirmed general incompatibility
+was found. Playerbots uses core spell data and casting checks, although the
+presence of an AI action with a matching spell name does not prove its Classic
+rotation supports the module's custom version. Separate human-only behavior
+below is a possible future design, not a delivery prerequisite.
 
 The inspected SQL introduces 54 spell-template rows in IDs 33393–33446 and
 contains 82 UPDATE statements against existing spell templates. It also adds
@@ -83,14 +93,16 @@ new spells, changed talents, resource/cost/cooldown behavior, proc and periodic
 effects, book discovery/loot and matching SQL/client data. The README at the
 inspected revision does not list Rogue changes.
 
-A candidate architecture is per-caster overrides or separate human spell/talent
-variants, retaining original templates for bots. This is a design proposal,
+If human-only isolation is later requested, a candidate architecture is
+per-caster overrides or separate human spell/talent variants, retaining
+original templates for bots. This is a design proposal,
 not a proven solution. Audit rank chains, learning, talent selection, cooldown
 categories, auras, pets/totems and triggered casts; matching MPQ/DBC changes
 must agree with the server's selected implementation. Do not globally mutate
 the original templates and then rely on a bot guard to undo their effects.
 
-Use a single tested eligibility policy for random bots, owned bots and alts;
+For that optional isolation design, use a single tested eligibility policy
+for random bots, owned bots and alts;
 the modules' `IsFreeBot` and `isRealPlayer` predicates have different meanings.
 Block bots from learning/using the new books and spells while retaining normal
 AI. A human's modified buff may still affect bot companions as a spell target;
@@ -98,9 +110,10 @@ preserving their own vanilla spellbook/AI is distinct from making them immune
 to every human-originated effect. Decide and test the desired target semantics.
 
 Bot breakage has not been demonstrated. What is verified is the shared-data
-exposure and the absence of an upstream human-only option. Test vanilla bot
-costs, cooldowns, talents and rotations separately; then cover human direct,
-proc, periodic and owned-unit casts across the complete module.
+exposure and the absence of an upstream human-only option. Test bot costs,
+cooldowns, talents and rotations against the intended balanced data, then
+cover human direct, proc, periodic and owned-unit casts across the complete
+module. Bots failing to use an extra spell is acceptable under the current scope.
 
 ## Classless readiness
 
@@ -127,10 +140,10 @@ Balancing adds talent, action-bar, power-type and spell-ownership interactions.
 
 Finish the baseline APK and Thor qualification first. Then add a pinned,
 disabled-by-default framework port with no gameplay module enabled; confirm
-realm boot, clean stop, persistence and bot parity. Full human-only Balancing
-remains the first requested gameplay module, but it needs the isolation design
-above rather than an upstream config change. Dual Spec, Transmog and Hardcore
-are smaller additions after the framework; Classless stays last and experimental.
+realm boot, clean stop, persistence and bot parity. Full shared Balancing
+remains the first requested gameplay module, with compatibility checks for bots.
+Dual Spec, Transmog and Hardcore are required additions after the framework;
+Classless stays last, optional and experimental.
 
 Each module gets its own build/config/migration switch and rollback record.
 Changes to the user's managed client copy belong in a reversible, hash-verified

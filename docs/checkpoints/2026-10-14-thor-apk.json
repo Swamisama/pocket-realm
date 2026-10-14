@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "checkpoint_date": "2026-10-14",
+  "status": "development_checkpoint_no_apk_or_device_qualification",
+  "tag": "checkpoint/thor-apk-plan-2026-10-14",
+  "source_head_before_checkpoint": "1ceef2df1570929f1184a9f0100bb6162a3291d1",
+  "branch": "vanilla-plus/baseline-setup",
+  "submodules": {
+    "cmangos-core": {
+      "path": "native/cmangos",
+      "commit": "1d2c026013ed9d75f4449b1dcdbfe4900c08747c"
+    },
+    "cmangos-db": {
+      "path": "native/classic-db",
+      "commit": "be1a5206bedccc8dc088b7c79dae31fcf3dbbfce"
+    },
+    "playerbots": {
+      "path": "native/playerbots",
+      "commit": "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a"
+    }
+  },
+  "required_feature_build_modules": [
+    "full-balancing",
+    "hardcore",
+    "transmog",
+    "dual-spec"
+  ],
+  "balancing_bot_policy": {
+    "shared_spell_changes_allowed": true,
+    "new_spell_learning_or_usage_required": false,
+    "human_only_isolation_required": false,
+    "functional_bot_compatibility_required": true
+  },
+  "optional_deferred_modules": [
+    "human-only-classless"
+  ],
+  "delivery_order": [
+    "baseline-arm64-apk-and-thor-qualification",
+    "required-modules-feature-apk-and-thor-qualification"
+  ],
+  "verified": {
+    "source_check_rechecked": true,
+    "repo_hygiene_rechecked": true,
+    "last_jvm_tests": {
+      "tests": 1143,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "detekt": "passed"
+    },
+    "unchanged_migration_entries": 414
+  },
+  "last_full_python_ci_selection": {
+    "passed": 635,
+    "failed": 18,
+    "errors": 20,
+    "skipped": 26,
+    "deselected_upstream": 8,
+    "note": "Desktop identity fixed and seven focused tests passed afterward; full suite not rerun."
+  },
+  "not_done": [
+    "linux-native-build-port",
+    "missing-native-source-fix-recovery",
+    "sqlite-recipe-and-seeding-reproducibility",
+    "complete-arm64-runtime-staging",
+    "verified-signed-apk",
+    "thor-backup-install-import-and-qualification",
+    "module-framework-port",
+    "required-gameplay-module-integration"
+  ],
+  "device": {
+    "adb_devices_at_checkpoint": [],
+    "existing_pocketrealm_installation": "unknown",
+    "user_client_path": "not supplied"
+  },
+  "evidence_local_only": {
+    "checkpoint-source-check.log": {
+      "sha256": "f874175fe6070255c0cb76761bcb57dab8246213ea5f95aa0a98a2366db422a1",
+      "bytes": 1437
+    },
+    "fork-gradle-unit.log": {
+      "sha256": "096ef7ca63a18106ab0f2585a321c1b0ca78d285587cf0bfb994121c8545d059",
+      "bytes": 3905
+    },
+    "fork-pytest-ci.log": {
+      "sha256": "1aeedde1b376d15c58188752cf53594535f65b1712d254316a53a48446664700",
+      "bytes": 76923
+    },
+    "fork-overlay-audit.log": {
+      "sha256": "c4720725efbd139634f9027ca851b1c6416dc13e113b1f8fd59210297d1330de",
+      "bytes": 472
+    },
+    "fork-clean-clone.log": {
+      "sha256": "a5ff2ba9ea23b6fc4daef4c20dfa682e39ca7aa745fa523dd0de4386fdc459e9",
+      "bytes": 1096
+    },
+    "gradle-arm64-with-env.log": {
+      "sha256": "8d83b176a91c785b3070f698ac77224e0c701fe9efad753a9c8e16acc6f7657b",
+      "bytes": 19174
+    }
+  }
+}
