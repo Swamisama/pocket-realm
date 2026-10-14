@@ -40,6 +40,12 @@ funding metadata.
   SQL bytes, sizes and compressed asset hashes. Only `source_commits` changes
   in `schemas/database-migrations.json`.
 - The migration host-parity tests pass, including refusal of changed SQL.
+- A fresh recursive clone from the Swamisama fork successfully checks out all
+  three exact native submodule revisions. The original missing-object error
+  is resolved for this fork.
+- The Android JVM suite and detekt pass against the new pins: 1,143 tests,
+  zero failures/errors/skips. The migration/overlay/weather checks pass another
+  17 targeted Python tests; the Windows build-identity checks pass seven.
 
 The migration builder now reproduces the original Windows filename order on
 Linux. For existing SQL, it accepts a line-ending conversion only when the
@@ -56,9 +62,9 @@ lockfiles retain their original historical source/build records pending rebuild.
 ## Remaining build work
 
 The first Python CI-selection run after source selection reports 635 passed,
-18 failed, 26 skipped, 8 upstream deselections and 20 errors. The app JVM suite
-passed 1,143 tests before the source selection; it must be rerun against this
-fork's pins before treating that result as current.
+18 failed, 26 skipped, 8 upstream deselections and 20 errors. The desktop
+identifier inconsistency from that run has since been corrected and its seven
+tests pass. The complete Python suite is not yet green.
 
 The failures are retained and must be addressed, not excluded:
 
@@ -71,8 +77,6 @@ The failures are retained and must be addressed, not excluded:
 - The SQLite seeder still assumes raw Windows SQL line endings and its cache
   provenance refers to the old migration-manifest identity. Revalidate its
   corpus and preserve the hash checks when making it host independent.
-- The Windows desktop build identifier needs regeneration for the selected
-  source pins. The Android ARM64 lane remains the target of this project.
 - Native build tools need Linux host discovery and dependency bootstrapping.
   The full ARM runtime/provider and renderer staging must then pass unchanged
   packaging validation.

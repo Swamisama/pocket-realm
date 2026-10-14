@@ -8,6 +8,7 @@
 *.dex
 .cxx/
 .gradle/
+.kotlin/
 
 # Native (CMake/NDK)
 build/
