@@ -3,12 +3,26 @@
 This is Swamisama's development fork for the AYN Thor Max. The immediate
 target is an ARM64 Android APK built on Linux, followed by a measured device
 baseline. Gameplay modules and balancing integration remain deferred until
-that baseline works. This branch is not yet a qualified APK release.
+that baseline works. This branch produces a host-verified test APK; device qualification is pending.
 
 The current scope and resume checklist are in [CHECKPOINT.md](CHECKPOINT.md).
 The feature build must include full Balancing, Hardcore, Transmog and Dual
 Spec. Bots may inherit balancing changes without needing to use the new spells;
 Classless remains optional future work.
+
+## Linux baseline build update — 2026-10-14
+
+The ARM64 baseline now builds on Linux, with repaired native fork sources and
+complete dependency staging. See [the build instructions](docs/LINUX_ARM64_BUILD.md)
+and [the current checkpoint](CHECKPOINT.md) for artifact verification and the
+remaining on-device qualification. No gameplay module has been integrated.
+
+The repaired native revisions are CMaNGOS
+`15d9293e772b9a825fc1d13be11554680b567e7d` and Playerbots
+`c66302ac8778ead1c6be21fb01091f203df8b7e0`. They descend from the explicitly
+selected source pins below. Historical audit statements below describe the
+saved checkpoint, not the current build result. Only ARM64/MySQL is built here;
+source-only updates to other lane lockfiles do not qualify their binaries.
 
 ## Source ownership and lineage
 

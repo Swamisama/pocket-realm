@@ -1,8 +1,10 @@
-# Checkpoint — path to an APK on the AYN Thor Max
+# Checkpoint — ARM64 baseline APK
 
-Recorded 2026-10-14. This is a development checkpoint, **not** a working-build
-or device-qualification tag. No APK exists yet and no device installation has
-been attempted. No gameplay module has been merged.
+Updated 2026-10-14. The Linux native build and ARM64 debug APK assembly are
+complete. Final signing, ABI, dependency-closure and 16 KiB package verification
+passed. The artifact fingerprint below will be refreshed after the final
+committed-state assembly. No device installation, client import or Thor
+runtime qualification has happened. No gameplay module has been integrated.
 
 ## Agreed feature scope
 
@@ -22,109 +24,105 @@ because they are absent from the first baseline. Full Balancing remains the
 first requested gameplay module after the framework is qualified. Classless,
 Skatecraft/Benilla and speculative QoL changes do not delay the baseline.
 
-## Repositories and exact starting state
+## Native source revisions
 
-- App: https://github.com/Swamisama/pocket-realm
-- Branch: `vanilla-plus/baseline-setup`
-- Source immediately before this checkpoint: `1ceef2df1570929f1184a9f0100bb6162a3291d1`.
-- CMaNGOS: https://github.com/Swamisama/mangos-classic,
-  `1d2c026013ed9d75f4449b1dcdbfe4900c08747c`.
-- Playerbots: https://github.com/Swamisama/playerbots,
-  `9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a`.
+- App/fork branch: `Swamisama/pocket-realm`, `vanilla-plus/baseline-setup`.
+  Exact app build revision is recorded in `output/arm64-baseline-verification.json`.
+- CMaNGOS: `15d9293e772b9a825fc1d13be11554680b567e7d` (Swamisama fork).
+- Playerbots: `c66302ac8778ead1c6be21fb01091f203df8b7e0` (Swamisama fork).
 - Classic-DB: `be1a5206bedccc8dc088b7c79dae31fcf3dbbfce`.
-- Original app lineage: `203b65b07056312dd23bcb861534a6bda261fb7d`.
+- Previous planning checkpoint: `96feb040e043110669069cd7eaefcf0fd09c753c`,
+  tag `checkpoint/thor-apk-plan-2026-10-14`. It remains historical evidence.
 
-The original native pins were unavailable upstream. Our explicitly selected
-replacement pins clone successfully and retain the published Android
-adaptations, but are not proven identical to the missing revisions. Native
-fixes expected by the current app still need to be restored and validated.
+The repaired core/bot commits descend from the available replacement pins
+`1d2c0260` / `9c3bf0d1`; they retain the Android lifecycle and Playerbots.
+The unavailable original app-native pins were not restored or substituted
+with a general upstream core. Socket completion ownership/error handling,
+reactor exception handling, the Android allocator purge and optional LLM
+wiring were restored in our forks. The legacy facade now implements the
+shared first-tick listener gate and refuses false readiness on failure.
 
-## Verified progress
+## Verified build results
 
-- Own app/core/bot forks created; a clean recursive clone succeeds.
-- Linux toolchain installed/configured: JDK 17, Android API 35, build-tools
-  36.0.0, NDK `30.0.15729638`, SDK CMake 4.1.2/Ninja, Python 3.12 and a local
-  pytest environment. SDK: `$HOME/Android/Sdk`.
-- Source verification and repository hygiene pass, rechecked for this checkpoint.
-- Android JVM tests and detekt pass against our selected pins: **1,143 tests,
-  zero failures/errors/skips**. This is a JVM result, not a native APK result.
-- All MySQL core/bot build overlays apply to disposable source clones and
-  restore without a tracked core diff.
-- All **414** original SQL migration records retain their identities, ordering,
-  SQL bytes and compressed hashes. Migration assets are staged. Linux/Windows
-  filename order and SQL line-ending reproducibility were fixed without
-  relaxing hash validation.
-- Seventeen targeted migration/overlay/weather tests and seven desktop
-  identity tests pass.
-- Wine and SQLite provider archives were downloaded and hash verified. These
-  caches are not the complete ARM64 runtime/provider set.
-- Module framework and five requested module repositories were inspected and
-  revisions recorded in [the feasibility report](docs/MODULE_FEASIBILITY.md).
+- Real Linux NDK/CMake/Ninja discovery, shell tools and bounded builds; no
+  misleading `.exe` aliases, MSYS2 requirement or Linux junction emulation.
+- OpenSSL 3.4.3, Boost 1.86.0, SQLite 3.46.1 and Connector/C built for ARM64.
+- Login/world with Playerbots, the complete legacy lifecycle facade, four
+  extractors, packaging/Wine/display bridges, proot/talloc and the Rust tweak
+  patcher compiled and staged. Vortek and Gladio guests were also rebuilt.
+- MariaDB 12.3.2, llama.cpp and Box64/Wine dependency providers recovered from
+  the SHA-256-pinned upstream 0.103.0 release. These are hash-verified provider
+  binaries, not claimed as local builds. The fork's core/extractors/patcher
+  were compiled locally. See `docs/LINUX_ARM64_BUILD.md` for that boundary.
+- Final ELF inspection caught two recovered helpers and the 32-bit proot
+  loader with 4 KiB segments. The original helper ABIs were rebuilt from
+  retained, pinned BSD source and the loader relinked for 16 KiB pages; no
+  alignment check was bypassed. Helper export sets and rebuild hashes pass.
+- All 414 migration records retain their original order, SQL identity/size
+  and compressed hashes. Seed revalidation reproduced the historical four
+  transcript digests exactly, resolved all 1,109,982 cached item references,
+  and checked loader/schema contracts and Vanilla equipment bounds. Loader
+  and capture hashes now guard reuse. Fresh device recapture is unqualified.
+- Full pristine-source Python CI selection: **678 passed, 23 skipped, eight
+  unchanged upstream deselections**, zero failures/errors. Remaining skips
+  are 19 external LLM authoring-harness cases, two Windows compiler cases and
+  two device-only expectations. No new skips/exclusions were added. Earlier
+  runs overlapping native overlays are superseded by this pristine rerun.
+- Android JVM: **1,143 tests**, zero failures/errors/skips; detekt passes.
+- Native host tests: target fence and legacy first-tick/reset gate pass (2/2).
+- Normal Gradle source/provenance, SQL, provider, ABI, hash and packaging gates
+  pass. APK signature, ZIP alignment, all 51 packaged ELF ABI/16 KiB checks,
+  exact locked artifact bytes and Box64's packaged glibc closure pass.
 
-## Current failures and limits
+ARM64/MySQL, extractors, patcher, display and helper binary provenance comes
+from actual builds. Other realm lanes' binary hashes remain historical;
+source-field refreshes do not qualify those other lanes. The old full-build
+failure counts are retained in Git history and logs, not the current result.
 
-The last full Python CI-selection run was **635 passed, 18 failed, 20 errors,
-26 skipped, 8 upstream deselections**. The desktop identity issue was fixed
-after that run and its seven checks pass; no complete rerun has established a
-new overall count. Do not describe the Python suite as passing.
+## Artifact and build evidence
 
-Known work includes missing native stability/optional LLM changes, a missing
-tracked SQLite CMake recipe, cross-platform raw-SQL handling in the SQLite
-seeder, and seed-cache provenance revalidation after our source repin. Preserve
-the existing test and provenance checks; resolve failures without adding skips.
+APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-Native scripts still assume MSYS2, `.exe` tools, Windows NDK paths and Windows
-junctions. They have not been ported. The pinned source fields in realm
-lockfiles were refreshed, but their binary hashes still describe upstream's
-last build. Those records are not proof of compiled fork binaries.
+- APK SHA-256: 981cc89b3d43ed9c3ec60d3fc99b83c4c809c7b76e5fdbedfa7aa052b2abab1e
+- Signing certificate SHA-256: 36a010b4f085fec8f5546924716f077209d1d776d45f7eab778865bdae9d13a8
+- Package: `com.pocketrealm`, debug/test signature, ARM64 native lane.
 
-The latest attempted ARM64 assembly failed at `:app:validateDatabaseRuntime`
-because the MariaDB provider and supporting staging/provenance were incomplete.
-SQL migrations have since been staged; the MariaDB binaries are still absent.
-The ARM64 world library and debug APK are also absent at this checkpoint.
+Toolchain: Ubuntu OpenJDK 17.0.20.1, Python 3.12.3, SDK API 35, build-tools
+36.0.0, NDK 30.0.15729638, SDK CMake 4.1.2/Ninja 1.12.1, Gradle 9.5.0 and
+AGP 9.3.1. Exact compiler/Rust and source details are in the verification
+report and generated native provenance. Build dependencies are retained in
+`requirements-linux-build.txt` and pinned source/provider recipes.
 
-ADB currently reports **no connected device**. Whether the Thor already has
-Pocket Realm installed and the location of the user's build-5875 client files
-have not yet been supplied. No RAM/CPU/battery or bot-limit measurements exist.
+Repeatable commands and the clean-build script are documented in
+[LINUX_ARM64_BUILD.md](docs/LINUX_ARM64_BUILD.md). The complete clean script is
+implemented; components and clean rebuild comparisons were exercised during
+qualification, not a second complete clean pipeline.
 
-## What remains before the first baseline APK reaches the Thor
+Evidence: `../baseline/logs/linux-realm-final-arm64.log`,
+`linux-extractors-arm64.log`, `linux-assemble-arm64.log`,
+`linux-apk-verification.log`, `linux-pytest-pristine.xml`, `linux-jvm-tests.log`,
+`linux-jvm-summary.json`, `linux-native-tests.log`, `linux-seed-revalidation-final.log`,
+`linux-display-rebuild.log` and `linux-runtime-helpers-rebuild.log`.
+`output/arm64-baseline-verification.json` is the final machine-readable report.
+Caches, APKs, logs, keys and generated provider/build artifacts stay local.
+No original Blizzard client or extracted client assets were downloaded,
+committed or bundled.
 
-1. **Repair source/build reproducibility.** Restore the tested native fixes
-   missing from the available mirrors. Add the tracked SQLite recipe, correct
-   SQL-seeder host handling and revalidate cache provenance against an unchanged
-   corpus. Make the published checks pass, retaining only upstream's existing
-   documented exclusions. Keep unrelated gameplay changes out of this stage.
-2. **Port the native toolchain to Linux.** Implement real host tool discovery
-   and a pinned dependency bootstrap for OpenSSL 3.4.3, Boost 1.86.0 and the
-   other locked dependencies. Use the installed NDK/CMake versions and bounded
-   build parallelism. Do not disguise Linux tools behind Windows `.exe` names.
-3. **Build and stage the entire ARM64 runtime.** This includes the MariaDB
-   Bionic provider/dependency closure, login/world with Playerbots, extractors,
-   packaging/display bridges, client tweak tool, Box64/Wine runtime and renderer
-   packages. Record actual build logs and regenerate source-to-binary provenance
-   and artifact hashes from the resulting fork builds. Retain ABI, dependency
-   closure, 16 KiB alignment, hash, runtime-provider and migration validation.
-4. **Assemble and verify the locally signed debug APK.** From `android/`:
-   `bash ./gradlew :app:assembleDebug -PpocketAbi=arm64-v8a -PpocketLane=full`.
-   The expected output is `android/app/build/outputs/apk/debug/app-debug.apk`.
-   Record its SHA-256, signing certificate and exact source revisions. Unit tests
-   alone do not produce the required verified APK.
-5. **Connect and protect the Thor.** Enable USB debugging and authorize ADB;
-   identify the exact serial/model/Android build/ABI/page size/storage. Check
-   for `com.pocketrealm` before installation. If present, obtain and verify a
-   usable off-device save backup and preserve the original APK before replacing
-   it. Review signing/package identity and update behavior for our fork; if a
-   separate ID is necessary, audit services, providers and hardcoded names.
-6. **Install and qualify.** Install the verified APK, import only the user's
-   legitimate WoW 1.12.1 build 5875 through the managed import flow, then test
-   realm startup, login, character creation, movement/combat, controller input,
-   Playerbots, airplane-mode play, clean shutdown and character persistence.
-   Collect logs/resource measurements. Mark/tag `baseline-working` only after
-   these succeed. No Blizzard client assets enter source control or the APK.
+## What remains for Thor installation (outside this build task)
 
-The PC is the Linux build machine; running the Android app natively on the PC
-is not a deliverable. There is no reliable APK delivery estimate until the
-first complete native ARM64 build has been attempted.
+Identify the device/model/build/ABI/page size and available storage. If
+`com.pocketrealm` is already installed, obtain and verify an off-device save
+backup and preserve the installed APK before any replacement. Check signing
+compatibility; never uninstall an existing app to evade a signature mismatch
+without a verified save/restore plan.
+
+Install the verified APK only as a separate authorized device task. Import
+only the user's legitimate WoW 1.12.1 build 5875 through the managed flow.
+Qualify startup, login, character creation, movement/combat, controllers,
+Playerbots, offline play, clean stop/restart, saves and restoration. Measure
+memory/CPU/battery/thermal behavior and bot tiers. Host package verification
+is not this on-device qualification. Do not create `baseline-working` until
+those device checks pass.
 
 ## What remains for the required feature APK
 
@@ -146,15 +144,3 @@ first complete native ARM64 build has been attempted.
 4. Package a second verified APK with the required features, back up the baseline
    realm, upgrade the Thor and repeat play/offline/persistence/restore checks.
    Keep a known-good baseline APK and save checkpoint as the rollback path.
-
-## Resume point and evidence
-
-Start with item 1 of the baseline list. The next work is Linux/native build
-repair, not Classless or module merging.
-
-Local environment and guarded assembly wrapper are in the adjacent
-`../baseline/scripts/`; `../baseline/RUNBOOK.md` retains the original audit.
-Evidence is in `../baseline/logs/`, including `fork-gradle-unit.log`,
-`fork-pytest-ci.log`, `fork-overlay-audit.log`, `fork-clean-clone.log`,
-`gradle-arm64-with-env.log` and `checkpoint-source-check.log`. Logs, provider
-caches and installed SDK packages are local artifacts, not committed source.
