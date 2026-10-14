@@ -34,8 +34,8 @@ PROVENANCE = BUILD / "realm-staging" / "BUILD_PROVENANCE.json"
 LOCKFILE = ROOT / "schemas" / "realm-runtime-lockfile.json"
 CONNECTOR_URL = "https://github.com/MariaDB/mariadb-connector-c.git"
 CONNECTOR_COMMIT = "de6305915f86bb33c83b1fe782a2b8a76920aec1"
-CMANGOS_COMMIT = "ce83805d48f9c98b2af617096be5347acb8a1f17"
-PLAYERBOTS_COMMIT = "7e2cd2fbbbb4eaa3e1696ee80e9bf8e170b6256d"
+CMANGOS_COMMIT = "1d2c026013ed9d75f4449b1dcdbfe4900c08747c"
+PLAYERBOTS_COMMIT = "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a"
 MAX_PAGE = 0x4000
 BACKEND = "mysql"
 

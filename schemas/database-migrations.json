@@ -3,9 +3,9 @@
   "app_build_id": "o08-g2-mariadb-v1",
   "ordering": "exact array order; stop realm/world before apply",
   "source_commits": {
-    "cmangos": "ce83805d48f9c98b2af617096be5347acb8a1f17",
+    "cmangos": "1d2c026013ed9d75f4449b1dcdbfe4900c08747c",
     "classic_db": "be1a5206bedccc8dc088b7c79dae31fcf3dbbfce",
-    "playerbots": "7e2cd2fbbbb4eaa3e1696ee80e9bf8e170b6256d"
+    "playerbots": "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a"
   },
   "expected_revisions": {
     "realm": "required_z2820_01_realmd_joindate_datetime",

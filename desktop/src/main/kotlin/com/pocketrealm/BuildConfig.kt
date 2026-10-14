@@ -15,11 +15,11 @@ package com.pocketrealm
  */
 object BuildConfig {
     const val NATIVE_RUNTIME_BUILD_ID: String =
-        "win-x86_64-sqlite-cmangos-ce83805d-playerbots-7e2cd2fb-633d89dfb70d"
+        "win-x86_64-sqlite-cmangos-1d2c0260-playerbots-9c3bf0d1-633d89dfb70d"
 
     const val NATIVE_CMANGOS_COMMIT: String =
-        "ce83805d48f9c98b2af617096be5347acb8a1f17"
+        "1d2c026013ed9d75f4449b1dcdbfe4900c08747c"
 
     const val NATIVE_PLAYERBOTS_COMMIT: String =
-        "7e2cd2fbbbb4eaa3e1696ee80e9bf8e170b6256d"
+        "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a"
 }

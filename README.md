@@ -1,5 +1,9 @@
 # Pocket Realm
 
+**Pocket Realm Vanilla+ development fork:** Linux builds and AYN Thor Max
+qualification are tracked in [FORK.md](FORK.md). This branch selects available,
+pinned Android-native sources; no qualified fork APK is available yet.
+
 Pocket Realm turns one Android handheld into
 both a World of Warcraft 1.12.1 "private realm" server and its game client,
 fully offline. It builds CMaNGOS (realmd + mangosd) and Playerbots as Android-native

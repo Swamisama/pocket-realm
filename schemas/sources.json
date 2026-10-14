@@ -38,10 +38,10 @@
       "id": "cmangos-core",
       "path": "native/cmangos",
       "kind": "git-submodule",
-      "upstream_url": "https://github.com/cmangos/mangos-classic.git",
+      "upstream_url": "https://github.com/Swamisama/mangos-classic.git",
       "branch": "pocket-realm",
-      "commit": "ce83805d48f9c98b2af617096be5347acb8a1f17",
-      "commit_date": "2026-08-18 (upstream base plus Pocket Realm Android, FetchContent, lifecycle, and comment-scrub commits)",
+      "commit": "1d2c026013ed9d75f4449b1dcdbfe4900c08747c",
+      "commit_date": "2026-09-18 (available Pocket Realm Android fork; source repin reviewed 2026-10-14)",
       "role": "Vanilla 1.12 game server core (mangosd + realmd). Built for x86_64 development and arm64-v8a release. The embeddable lifecycle is retained as library-lane evidence for the production component topology.",
       "o09_source_overlays": [
         {
@@ -60,7 +60,8 @@
       "redistribution": {
         "verdict": "source-redistributable",
         "notes": "GPL-2.0 source may be redistributed. Compiled server binaries are linked by the Android app under GPL terms. The server is never translated; only the user-supplied client runs under translation."
-      }
+      },
+      "original_upstream_url": "https://github.com/cmangos/mangos-classic.git"
     },
     {
       "id": "cmangos-db",
@@ -83,17 +84,18 @@
       "id": "playerbots",
       "path": "native/playerbots",
       "kind": "git-submodule",
-      "upstream_url": "https://github.com/cmangos/playerbots.git",
+      "upstream_url": "https://github.com/Swamisama/playerbots.git",
       "branch": "pocket-realm",
-      "commit": "7e2cd2fbbbb4eaa3e1696ee80e9bf8e170b6256d",
-      "commit_date": "2026-07-31 (+ Pocket Realm Android patch)",
+      "commit": "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a",
+      "commit_date": "2026-09-18 (available Pocket Realm Android fork; source repin reviewed 2026-10-14)",
       "role": "Bot subsystem enabled only after the MariaDB-backed zero-bot gate; measured tiers and admission control are tracked with the bot feature.",
       "license": "GPL-2.0-or-later",
       "license_file": "native/playerbots/CMakeLists.txt (header)",
       "redistribution": {
         "verdict": "source-redistributable",
         "notes": "GPL-2.0, inherits CMaNGOS licensing. Linked into the native world component of the production topology."
-      }
+      },
+      "original_upstream_url": "https://github.com/cmangos/playerbots.git"
     },
     {
       "id": "wine-kron4ek-11-14-vanilla-wow64",

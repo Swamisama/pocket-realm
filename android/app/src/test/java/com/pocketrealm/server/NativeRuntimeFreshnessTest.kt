@@ -24,8 +24,8 @@ class NativeRuntimeFreshnessTest {
     private val lockfileLabel = "schemas/realm-runtime-lockfile.json"
     private val stagingLabel = "native/.build-o09-x86_64/realm-staging"
 
-    private val cmangosPin = "ce83805d48f9c98b2af617096be5347acb8a1f17"
-    private val playerbotsPin = "7e2cd2fbbbb4eaa3e1696ee80e9bf8e170b6256d"
+    private val cmangosPin = "1d2c026013ed9d75f4449b1dcdbfe4900c08747c"
+    private val playerbotsPin = "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a"
     private val otherCommit = "1111111111111111111111111111111111111111"
     private val worldSha = "8b06a4dc48005215cb31083504edf5e9531e135a8c57dfcca98930ccb1da8ee7"
     private val staleWorldSha =

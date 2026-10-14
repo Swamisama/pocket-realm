@@ -5,8 +5,8 @@
   "elf_max_page_size": "0x4000",
   "playerbots": true,
   "auction_house_bot": false,
-  "cmangos_commit": "ce83805d48f9c98b2af617096be5347acb8a1f17",
-  "playerbots_commit": "7e2cd2fbbbb4eaa3e1696ee80e9bf8e170b6256d",
+  "cmangos_commit": "1d2c026013ed9d75f4449b1dcdbfe4900c08747c",
+  "playerbots_commit": "9c3bf0d15a8618a9c61181a2cb67b81e65b0b92a",
   "database_backend": "sqlite",
   "cmangos_source_overlays": [
     {
@@ -265,7 +265,6 @@
     "native/patches/cmangos/QueryResultSqlite.cpp": "c7f84c1b7e5e6ea70671a4ab2d7912b50f412916ac131201e35087bded0709b5",
     "native/patches/cmangos/QueryResultSqlite.h": "122ecdabfafd5492df2ed313e2b6eaf6eb82c25c84930d3c4b7bcf2f9976d810",
     "native/patches/o11-cmangos-safe-mpq-listfile.patch": "f0103d0aa7426bbfd9237225657e25eb5c3446baefd98cbebb05a72ddefe27d0",
-    "native/patches/playerbots/llm_banter_core.h": "9b460c5e033215c7ba88c4af973042d16206a62fb12ab7f1543a22d311ba2983",
     "native/patches/playerbots/PlayerbotLlamaRuntime.cpp": "2e9618fc56e5c839cb434e630db6236b2fa347f077e3aec122b463bea14406ed",
     "native/patches/playerbots/PlayerbotLlamaRuntime.h": "9689f9bc57b27d5b1983c9050e2bd7324ffb02204eeba5dbf6189fc5317e72ab",
     "native/patches/playerbots/PlayerbotLlmBridge.cpp": "7b30d1bf60c98c47180f00ee2bff048d93a89ff9bdee923d16eade4d5976f83a",
@@ -286,7 +285,8 @@
     "native/patches/playerbots/PlayerbotLlmTools.cpp": "31d3411e1e71c145c46f4793a977dd133ca7cf5236a0674528e8b0e302380d21",
     "native/patches/playerbots/PlayerbotLlmTools.h": "9898b16015b044b74aced21c6ba757dd2ce3ce8bb870651ac70375656aceaa28",
     "native/patches/playerbots/PlayerbotLlmToolsCore.h": "eceeea7864c03bc236cf207ecb00313292ac160c786fea8b3f5281c735c52f7e",
-    "native/patches/playerbots/PlayerbotLlmTruthCore.h": "cc3d31ccc576a8c6e818065f5eeeb4456bee9072448d9138fd4a00bcab56c803"
+    "native/patches/playerbots/PlayerbotLlmTruthCore.h": "cc3d31ccc576a8c6e818065f5eeeb4456bee9072448d9138fd4a00bcab56c803",
+    "native/patches/playerbots/llm_banter_core.h": "9b460c5e033215c7ba88c4af973042d16206a62fb12ab7f1543a22d311ba2983"
   },
   "mariadb_connector_c": null,
   "artifacts": [
