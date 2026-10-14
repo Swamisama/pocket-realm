@@ -422,17 +422,28 @@ abstract class ValidateSelectedNativeClosureTask : DefaultTask() {
         if (abi == "arm64-v8a" && selectedLane == "full") {
             val gladioServer = File(nativeBuildRoot,
                 "xserver-winlator-build/libgladiorenderer.so")
-            // Pinned build carries the share-group lifetime fix
-            // (refcounted GLSharedObjectState in gl_client_state.h).
-            check(gladioServer.length() == 1_314_512L && sha256(gladioServer) ==
-                "4e722a89c8871fb59627f36a5a48446e7d7a0e96e4136bf27188f0a041ebc705") {
-                "ARM Gladio server differs from the reviewed source build"
+            val displayLock = JsonSlurper().parse(File(repoRoot,
+                "schemas/display-runtime-lockfile-arm64-v8a.json")) as Map<*, *>
+            val host = if (System.getProperty("os.name").startsWith("Windows"))
+                "windows-x86_64" else "linux-x86_64"
+            val hostRecord = (displayLock["hosts"] as Map<*, *>)[host] as? Map<*, *>
+                ?: error("No reviewed display build for host $host")
+            val displayArtifacts = hostRecord["artifacts"] as Map<*, *>
+            fun requireDisplayPin(file: File) {
+                val pin = displayArtifacts[file.name] as Map<*, *>
+                check((pin["size"] as Number).toLong() == file.length() &&
+                    pin["sha256"] == sha256(file)) {
+                    "ARM display artifact differs from the reviewed $host source build: $file"
+                }
             }
+            requireDisplayPin(gladioServer)
             val virglServer = File(nativeBuildRoot,
                 "xserver-winlator-build/libvirglrenderer.so")
-            check(virglServer.length() == 1_959_112L && sha256(virglServer) ==
-                "c6895de1a5407fc60f3098e4d650689fb6c45e89126560cce8867d98e56286ae") {
-                "ARM VirGL server differs from the reviewed source build"
+            requireDisplayPin(virglServer)
+            if (host == "linux-x86_64") {
+                for (name in listOf("libwinlator.so", "libvortekrenderer.so")) {
+                    requireDisplayPin(File(nativeBuildRoot, "xserver-winlator-build/$name"))
+                }
             }
             val virglServerProvenance = JsonSlurper().parse(File(nativeBuildRoot,
                 "xserver-winlator-build/VIRGL_BUILD_PROVENANCE.json")) as Map<*, *>
@@ -446,7 +457,7 @@ abstract class ValidateSelectedNativeClosureTask : DefaultTask() {
                     // provenance, so tooling changes regenerate it while the
                     // libvirglrenderer.so binary stays byte-identical
                     // (sha/size pins above unchanged).
-                    "ecde987136d772e99c289e882c19df18796e760fef2a232b963694ee544f1e15" &&
+                    "25a09b2278e9b81e977ce3b9385c1a860d287a5647f6d19b26c820c6a24d4b0a" &&
                 virglServerProvenance["ndk_version"] == "30.0.15729638" &&
                 (virglServerProvenance["size"] as Number).toLong() == virglServer.length() &&
                 virglServerProvenance["sha256"] == sha256(virglServer) &&
@@ -1501,22 +1512,18 @@ tasks.register(rp6HardwareQualificationTaskName) {
     dependsOn("connectedDebugAndroidTest")
 }
 
-// Resolve the NDK via the same ndk-link junction build_native.py creates, then
-// fall back to a discovered ndk/<version> dir. Used only to locate
-// libc++_shared.so for the staged closure.
+// Runtime C++ library must come from the same pinned NDK as the native build.
 val sdkRoot = providers.environmentVariable("ANDROID_SDK_ROOT")
     .orElse(providers.environmentVariable("ANDROID_HOME")).orElse("")
-val ndkLinkPath = sdkRoot.map { "$it/ndk-link" }
-val ndkVersionsPath = sdkRoot.map { "$it/ndk" }
 val ndkRootProvider = provider {
-    val link = File(ndkLinkPath.get())
-    if (link.isDirectory) return@provider link
-    val versionsDir = File(ndkVersionsPath.get())
-    if (versionsDir.isDirectory) {
-        versionsDir.listFiles()?.filter { it.isDirectory }
-            ?.maxByOrNull { it.name }?.let { return@provider it }
-    }
-    error("NDK not found under ANDROID_SDK_ROOT/ndk[-link]. Run scripts/build_native.py first.")
+    val pinned = File(sdkRoot.get(), "ndk/30.0.15729638")
+    check(pinned.isDirectory) { "Pinned NDK 30.0.15729638 missing: $pinned" }
+    pinned
+}
+val pocketNdkHostTag = when {
+    System.getProperty("os.name").startsWith("Windows") -> "windows-x86_64"
+    System.getProperty("os.name").startsWith("Mac") -> "darwin-x86_64"
+    else -> "linux-x86_64"
 }
 
 val verifyGeneratedVulkanDriverCatalog = tasks.register<Exec>(
@@ -1837,7 +1844,7 @@ val stageNativeLibs by tasks.registering(Sync::class) {
     // from a platform path. Platform libs (libc/libm/libdl/liblog) are excluded.
     from(provider {
         val ndk = ndkRootProvider.get()
-        File(ndk, "toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib/$pocketNdkLibraryTriple/libc++_shared.so")
+        File(ndk, "toolchains/llvm/prebuilt/$pocketNdkHostTag/sysroot/usr/lib/$pocketNdkLibraryTriple/libc++_shared.so")
     })
     if (pocketLane == "full") {
     // The Wine + glibc ELF closure (53 files: glibc loader + libs, gcc-libs,

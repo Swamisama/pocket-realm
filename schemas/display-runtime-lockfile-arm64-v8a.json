@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "abi": "arm64-v8a",
+  "ndk_version": "30.0.15729638",
+  "cmake_version": "4.1.2",
+  "hosts": {
+    "linux-x86_64": {
+      "artifacts": {
+        "libwinlator.so": {
+          "size": 453600,
+          "sha256": "086cd6ec0e2c1707464a8066255a4bacf33042b531b568e2fcf008979282e8fb"
+        },
+        "libgladiorenderer.so": {
+          "size": 1318848,
+          "sha256": "3544508bc3580dbd388687d4d720c73e32b800b53947267287506ef941abce00"
+        },
+        "libvortekrenderer.so": {
+          "size": 2359008,
+          "sha256": "7f316c45b5fbbe125c12b409b404092837060468d0de87206cc35e5d2381df6b"
+        },
+        "libvirglrenderer.so": {
+          "size": 1964232,
+          "sha256": "456b32ab0fbd87b9fa5e247c71ced57fbf7497796232ba4694167f33351a6af0"
+        }
+      },
+      "virgl_adapted_source_sha256": "25a09b2278e9b81e977ce3b9385c1a860d287a5647f6d19b26c820c6a24d4b0a",
+      "clean_rebuild_byte_identical": true
+    },
+    "windows-x86_64": {
+      "artifacts": {
+        "libgladiorenderer.so": {
+          "size": 1314512,
+          "sha256": "4e722a89c8871fb59627f36a5a48446e7d7a0e96e4136bf27188f0a041ebc705"
+        },
+        "libvirglrenderer.so": {
+          "size": 1959112,
+          "sha256": "c6895de1a5407fc60f3098e4d650689fb6c45e89126560cce8867d98e56286ae"
+        }
+      },
+      "qualification": "historical upstream binaries; Windows build not rerun"
+    }
+  }
+}
