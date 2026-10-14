@@ -2,8 +2,7 @@
 
 Updated 2026-10-14. The Linux native build and ARM64 debug APK assembly are
 complete. Final signing, ABI, dependency-closure and 16 KiB package verification
-passed. The artifact fingerprint below will be refreshed after the final
-committed-state assembly. No device installation, client import or Thor
+passed. The artifact below passed the final committed-state assembly and audit. No device installation, client import or Thor
 runtime qualification has happened. No gameplay module has been integrated.
 
 ## Agreed feature scope
@@ -27,7 +26,7 @@ Skatecraft/Benilla and speculative QoL changes do not delay the baseline.
 ## Native source revisions
 
 - App/fork branch: `Swamisama/pocket-realm`, `vanilla-plus/baseline-setup`.
-  Exact app build revision is recorded in `output/arm64-baseline-verification.json`.
+  Exact app build revision: `f736930745683a918078ea156de43827b72b430d` (later checkpoint-only documentation does not change the artifact inputs).
 - CMaNGOS: `15d9293e772b9a825fc1d13be11554680b567e7d` (Swamisama fork).
 - Playerbots: `c66302ac8778ead1c6be21fb01091f203df8b7e0` (Swamisama fork).
 - Classic-DB: `be1a5206bedccc8dc088b7c79dae31fcf3dbbfce`.
@@ -83,7 +82,7 @@ failure counts are retained in Git history and logs, not the current result.
 
 APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-- APK SHA-256: 981cc89b3d43ed9c3ec60d3fc99b83c4c809c7b76e5fdbedfa7aa052b2abab1e
+- APK SHA-256: a11e898607dc71ea79553f63f13631963ce241257453d28141ee81d7135092b8
 - Signing certificate SHA-256: 36a010b4f085fec8f5546924716f077209d1d776d45f7eab778865bdae9d13a8
 - Package: `com.pocketrealm`, debug/test signature, ARM64 native lane.
 
@@ -99,8 +98,8 @@ implemented; components and clean rebuild comparisons were exercised during
 qualification, not a second complete clean pipeline.
 
 Evidence: `../baseline/logs/linux-realm-final-arm64.log`,
-`linux-extractors-arm64.log`, `linux-assemble-arm64.log`,
-`linux-apk-verification.log`, `linux-pytest-pristine.xml`, `linux-jvm-tests.log`,
+`linux-extractors-arm64.log`, `linux-final-wrapper.log`,
+`linux-apk-verification-final.log`, `linux-pytest-pristine.xml`, `linux-jvm-tests.log`,
 `linux-jvm-summary.json`, `linux-native-tests.log`, `linux-seed-revalidation-final.log`,
 `linux-display-rebuild.log` and `linux-runtime-helpers-rebuild.log`.
 `output/arm64-baseline-verification.json` is the final machine-readable report.
