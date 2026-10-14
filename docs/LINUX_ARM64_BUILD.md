@@ -70,6 +70,16 @@ loader and capture hashes. Run `python tools/revalidate_seed_cache.py` only
 for a reviewed source-only repin. It fails on changed migration records or
 seed output. A fresh device cache capture remains outside host qualification.
 
+## Recording a rebuild on another host/path
+
+Native binaries can differ when the build path or toolchain changes. Builders
+regenerate binary lockfiles from the actual outputs. Final verification
+requires a clean, committed source tree: review and commit those generated
+lockfile changes, then rerun the assembly command below and
+`python tools/verify_arm64_apk.py`. This records a concrete build revision;
+source-only lockfile regeneration cannot substitute for compilation. The full
+script intentionally fails final verification when those inputs are uncommitted.
+
 ## Checks and outputs
 
 The script runs repository/source checks, the exact CI Python selection

@@ -26,7 +26,7 @@ Skatecraft/Benilla and speculative QoL changes do not delay the baseline.
 ## Native source revisions
 
 - App/fork branch: `Swamisama/pocket-realm`, `vanilla-plus/baseline-setup`.
-  Exact app build revision: `f736930745683a918078ea156de43827b72b430d` (later checkpoint-only documentation does not change the artifact inputs).
+  Exact app build revision: `f736930745683a918078ea156de43827b72b430d` (later documentation-only updates do not change the artifact inputs).
 - CMaNGOS: `15d9293e772b9a825fc1d13be11554680b567e7d` (Swamisama fork).
 - Playerbots: `c66302ac8778ead1c6be21fb01091f203df8b7e0` (Swamisama fork).
 - Classic-DB: `be1a5206bedccc8dc088b7c79dae31fcf3dbbfce`.
